@@ -1,0 +1,16 @@
+.DS_Store
+*.log
+node_modules/
+.vscode/
+
+# PRESCUE local files
+.venv/
+__pycache__/
+.DS_Store
+*.bak
+*.bak2
+*.before-*
+prescue_backup/
+.env
+.env.*
+wifi_settings.h

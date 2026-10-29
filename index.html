@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f9fc">
+  <meta name="description" content="PRESCUE — Dashboard pemantauan dan pengujian simulator verifikasi tekanan darah portabel.">
+  <title>PRESCUE — Dashboard NIBP Simulator</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M2 12h4l3-8 5 16 3-8h5"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3z"/><path d="M9 20v-7h6v7"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 3v17h17"/><path d="m7 15 4-5 4 2 4-6"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 2h6M10 2v7L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3L14 9V2"/><path d="M8 16h8"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-7l-3 3"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 3l2.1 1 2.3-.5 1.4 2 2.2.8.2 2.4L22 11l-1.8 1.7-.2 2.4-2.2.8-1.4 2-2.3-.5L12 19l-2.1-1-2.3.5-1.4-2-2.2-.8-.2-2.4L2 11l1.8-1.7.2-2.4 2.2-.8 1.4-2 2.3.5z"/><circle cx="12" cy="11" r="3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 10 18H2L12 3z"/><path d="M12 9v5m0 3v.2"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2"/></symbol>
+    <symbol id="i-droplet" viewBox="0 0 24 24"><path d="M12 2C8 8 5 12 5 16a7 7 0 0 0 14 0c0-4-3-8-7-14z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M4 17v4h16v-4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5 10a8 8 0 0 1 14-3l1 5M4 12l1 5a8 8 0 0 0 14-3"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-7-7 7 7-7 7"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#overview" aria-label="PRESCUE beranda">
+        <span class="brand-symbol"><svg class="ico"><use href="#i-wave"/></svg></span>
+        <span><strong>PRESCUE<span class="brand-period">:</span></strong><small>NIBP verification system</small></span>
+      </a>
+      <div class="nav-overline">WORKSPACE</div>
+      <nav class="side-nav" aria-label="Navigasi utama">
+        <a href="#overview" class="nav-link active" data-nav="overview"><svg class="ico"><use href="#i-home"/></svg>Ringkasan</a>
+        <a href="#monitoring" class="nav-link" data-nav="monitoring"><svg class="ico"><use href="#i-chart"/></svg>Live Monitoring</a>
+        <a href="#testing" class="nav-link" data-nav="testing"><svg class="ico"><use href="#i-flask"/></svg>Pengujian</a>
+        <a href="#history" class="nav-link" data-nav="history"><svg class="ico"><use href="#i-history"/></svg>Hasil & Riwayat</a>
+        <a href="#integration" class="nav-link" data-nav="integration"><svg class="ico"><use href="#i-settings"/></svg>Integrasi API</a>
+      </nav>
+      <div class="side-bottom">
+        <div class="hardware-mini"><span class="hardware-mini-icon"><svg class="ico"><use href="#i-cpu"/></svg></span><div><strong>ESP32 + MPX5050DP</strong><small>Firmware pengujian tahap awal</small></div></div>
+        <div class="sidebar-credit">Kelompok 18 · Desain Proyek 2<br>FT Universitas Indonesia · 2026</div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button mobile-menu" id="menuToggle" aria-label="Buka menu"><svg class="ico"><use href="#i-menu"/></svg></button>
+          <div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumbTitle">Ringkasan</strong></div>
+        </div>
+        <div class="topbar-right">
+          <span class="date-chip" id="todayLabel"></span>
+          <span class="connection-pill is-demo" id="connectionPill"><span class="status-dot"></span><span id="connectionLabel">Data Rekaman</span></span>
+          <button class="top-settings" id="quickApiSettings" title="Pengaturan koneksi API" aria-label="Pengaturan koneksi API"><svg class="ico"><use href="#i-settings"/></svg></button>
+        </div>
+      </header>
+      <main class="content">
+        <section class="section section-overview" id="overview" aria-label="Ringkasan PRESCUE">
+          <div class="hero-banner">
+            <div class="hero-content">
+              <div class="eyebrow light"><span class="eyebrow-line"></span> PORTABLE BLOOD PRESSURE VERIFICATION</div>
+              <h1>PRESCUE</span></h1>
+              <p class="hero-subtitle">Simulator Verifikasi Tekanan Darah Portabel<br class="desktop-break"> Berbiaya Rendah untuk <strong>Kondisi Darurat Bencana</strong></p>
+              <p class="hero-support">Pantau pembacaan sensor, uji kebocoran, dan performa rangkaian pneumatik melalui satu dashboard yang siap terhubung ke ESP32.</p>
+              <div class="hero-actions"><a class="button primary light-primary" href="#monitoring"><svg class="ico"><use href="#i-chart"/></svg> Lihat Monitoring</a><a class="button outline-light" href="#testing">Tahapan Pengujian <svg class="ico"><use href="#i-arrow"/></svg></a></div>
+            </div>
+          </div>
+
+          <div class="section-heading compact"><div><div class="eyebrow">RINGKASAN SISTEM</div><h2>Kondisi pengujian</h2><p>Nilai mengikuti sumber data yang dipilih; data contoh bukan pembacaan live.</p></div><span class="source-label" id="dataSourceLabel">REKAMAN PENGUJIAN</span></div>
+          <div class="metrics-grid">
+            <article class="metric-card"><div class="metric-top"><span class="metric-ico blue"><svg class="ico"><use href="#i-wave"/></svg></span><span class="metric-label">Tekanan terakhir</span></div><div class="metric-value"><span id="metricPressure">129,648</span><span class="unit">mmHg</span></div><div class="metric-foot" id="metricPressureFoot">Akhir rekaman uji kebocoran</div></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-ico purple"><svg class="ico"><use href="#i-droplet"/></svg></span><span class="metric-label">Target tekanan</span></div><div class="metric-value"><span id="metricTarget">150</span><span class="unit">mmHg</span></div><div class="metric-foot">Target pada uji G / L</div></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-ico cyan"><svg class="ico"><use href="#i-clock"/></svg></span><span class="metric-label">Fase terakhir</span></div><div class="metric-value stage-value" id="metricPhase">RECORD</div><div class="metric-foot" id="metricPhaseFoot">Fase perekaman kebocoran</div></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-ico red"><svg class="ico"><use href="#i-alert"/></svg></span><span class="metric-label">Laju kebocoran</span></div><div class="metric-value danger"><span id="metricLeak">8,5736</span><span class="unit">mmHg/menit</span></div><div class="metric-foot" id="metricLeakFoot">Batas uji ≤ 5 mmHg/menit</div></article>
+          </div>
+          <div class="notice info" id="modeNotice"><svg class="ico"><use href="#i-info"/></svg><div><strong>Menampilkan hasil pengujian terakhir kelompok.</strong><span>Dashboard belum membaca ESP32 secara langsung. Hubungkan endpoint di bagian Integrasi API saat firmware web server tersedia.</span></div></div>
+        </section>
+
+        <section class="section" id="monitoring">
+          <div class="section-heading"><div><div class="eyebrow">TEKANAN & SENSOR</div><h2>Monitoring tekanan</h2><p>Grafik tekanan terhadap waktu, dengan fase pengujian yang dapat dibedakan.</p></div><div class="heading-actions"><button class="button secondary sm" id="replayBtn"><svg class="ico"><use href="#i-play"/></svg> Putar ulang rekaman</button></div></div>
+          <div class="monitor-layout">
+            <div class="panel graph-panel">
+              <div class="panel-heading"><div><h3>Grafik tekanan vs waktu</h3><p id="graphSubtitle">Cuplikan titik hasil pengujian G dan L · bukan live</p></div><div class="legend"><span><i class="leg-fill"></i> FILL</span><span><i class="leg-settle"></i> SETTLE</span><span><i class="leg-record"></i> RECORD</span></div></div>
+              <div class="chart-container"><canvas id="pressureChart" aria-label="Grafik tekanan terhadap waktu" role="img"></canvas><div class="chart-tooltip" id="chartTooltip" hidden></div></div>
+              <div class="chart-bottom"><span><i class="chart-live-dot" id="chartDot"></i><span id="chartStatusLabel">Cuplikan data rekaman</span></span><span id="chartSamplesCount">— titik</span></div>
+            </div>
+            <div class="panel status-panel">
+              <div class="panel-heading"><div><h3>Status subsistem</h3><p>Indikator tersedia jika dikirim oleh API.</p></div><svg class="ico header-symbol"><use href="#i-cpu"/></svg></div>
+              <div class="component-row"><div class="component-name"><span class="component-icon"><svg class="ico"><use href="#i-cpu"/></svg></span>ESP32</div><span class="value-tag neutral" id="statusEsp">Belum live</span></div>
+              <div class="component-row"><div class="component-name"><span class="component-icon"><svg class="ico"><use href="#i-wave"/></svg></span>Sensor MPX5050DP</div><span class="value-tag green" id="statusSensor">Terbaca di log</span></div>
+              <div class="component-row"><div class="component-name"><span class="component-icon"><svg class="ico"><use href="#i-droplet"/></svg></span>Pompa</div><span class="value-tag neutral" id="statusPump">OFF (akhir uji)</span></div>
+              <div class="component-row"><div class="component-name"><span class="component-icon"><svg class="ico"><use href="#i-settings"/></svg></span>Solenoid</div><span class="value-tag neutral" id="statusValve">Tertutup (akhir uji)</span></div>
+              <div class="mini-divider"></div>
+              <h4>Pembacaan sensor</h4><div class="sensor-grid"><div><small>ADC mentah</small><strong id="statusRaw">Belum tersedia</strong></div><div><small>Tegangan sensor</small><strong id="statusVolt">Belum tersedia</strong></div></div>
+              <div class="calibration-note"><strong>Kalibrasi ADC tegangan: sudah dicoba</strong><span>Dua titik tegangan dilaporkan pada tahap awal. Akurasi tekanan terhadap manometer acuan masih memerlukan verifikasi tersendiri.</span></div><div class="status-footnote">Nilai yang tidak tersedia tidak diisi perkiraan. Data sensor lanjutan perlu disediakan ESP32.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="testing">
+          <div class="section-heading"><div><div class="eyebrow">METODE PENGUJIAN</div><h2>Alur pengujian prototipe</h2><p>Menunjukkan mode yang sudah dicoba serta tahap lanjutan yang masih perlu diverifikasi.</p></div></div>
+          <div class="tests-grid">
+            <article class="test-card"><div class="test-index">01 <span class="tag blue">SUDAH DIUJI</span></div><div class="test-mark fill-mark">G</div><h3>Pengisian Tekanan</h3><p>Pompa mengisi sistem sampai target tekanan tercapai, lalu pompa dimatikan.</p><div class="test-data"><span>Target 150 mmHg</span><strong>8,781 dtk</strong></div></article>
+            <article class="test-card selected"><div class="test-index">02 <span class="tag red">PERLU PERBAIKAN</span></div><div class="test-mark leak-mark">L</div><h3>Uji Kebocoran</h3><p>FILL → SETTLE → RECORD, lalu perhitungan laju kebocoran berbasis regresi.</p><div class="test-data"><span>Batas ≤ 5 mmHg/menit</span><strong class="red-text">GAGAL</strong></div></article>
+            <article class="test-card"><div class="test-index">03 <span class="tag green">SUDAH DIUJI</span></div><div class="test-mark monitor-mark">S</div><h3>Mode Pantau</h3><p>Memantau pembacaan tekanan dan status sensor lewat Serial Monitor.</p><div class="test-data"><span>Monitor sensor</span><strong>Serial</strong></div></article>
+            <article class="test-card muted"><div class="test-index">04 <span class="tag gray">BELUM ADA HASIL</span></div><div class="test-mark muted-mark">E / F</div><h3>Tahan & Deflasi</h3><p>Mode sudah tersedia sebagai perintah firmware, tetapi hasil pengujiannya belum diberikan.</p><div class="test-data"><span>Pengujian lanjutan</span><strong>Menunggu</strong></div></article>
+          </div>
+
+          <!-- PRESCUE COMMAND PANEL V1: read-only until firmware enables remote control -->
+          <div class="panel pc-controls" id="pcControls">
+            <div class="panel-heading"><div><h3>Kontrol Pengujian ESP32</h3><p>Perintah dari website menggantikan input Serial Monitor setelah API firmware tersedia.</p></div><span class="pc-state" id="pcState">Belum terhubung</span></div>
+            <div class="pc-form">
+              <label for="pcTarget">Target tekanan (mmHg)</label>
+              <input id="pcTarget" type="number" min="20" max="150" step="1" value="150" inputmode="numeric">
+              <button type="button" class="button secondary" id="pcCheck">Periksa kesiapan API</button>
+            </div>
+            <div class="pc-actions">
+              <button type="button" class="button primary" data-pc-command="G" disabled>G · Isi tekanan</button>
+              <button type="button" class="button secondary" data-pc-command="L" disabled>L · Uji kebocoran</button>
+              <button type="button" class="button secondary pc-vent" data-pc-command="O" disabled>O · Buang tekanan</button>
+            </div>
+            <p id="pcFeedback" class="pc-feedback" role="status" aria-live="polite">Kontrol web belum aktif. Koneksi dan izin harus dikonfirmasi oleh firmware ESP32.</p>
+            <p class="pc-warning">Uji hanya pada rangkaian tanpa pasien. Pengaman tekanan dan pelepasan tekanan darurat wajib bekerja mandiri di firmware/hardware, bukan bergantung pada website.</p>
+          </div>
+          <div class="test-info-grid">
+            <div class="panel test-summary"><div class="panel-heading"><div><h3>Detail uji kebocoran terakhir</h3><p>Data aktual dari output `L:150` yang dibagikan tim.</p></div><span class="result-pill fail" id="resultBadge"><svg class="ico"><use href="#i-alert"/></svg> GAGAL</span></div>
+              <div class="detail-table"><div><span>Tekanan target</span><strong id="detailTarget">150 mmHg</strong></div><div><span>Tekanan tercapai</span><strong>150,044 mmHg</strong></div><div><span>Durasi isi</span><strong>8,781 detik</strong></div><div><span>Masa SETTLE pada rekaman</span><strong>30 detik</strong></div><div><span>Durasi RECORD</span><strong>60 detik</strong></div><div><span>Jumlah sampel yang dilaporkan</span><strong>300</strong></div><div><span>Tekanan awal RECORD</span><strong>139,437 mmHg</strong></div><div><span>Tekanan akhir RECORD</span><strong>129,648 mmHg</strong></div><div><span>Laju kebocoran (regresi)</span><strong class="red-text">8,5736 mmHg/menit</strong></div></div>
+            </div>
+            <div class="panel insight-panel"><div class="panel-heading"><div><h3>Catatan teknis & tindak lanjut</h3><p>Prioritas mengikuti hasil yang benar-benar teramati.</p></div></div>
+              <div class="insight-list"><div class="insight-item"><span class="insight-number">1</span><div><strong>Selidiki sumber penurunan tekanan</strong><p>Selisih tekanan mengindikasikan kebocoran atau perubahan kondisi selama pencatatan; penyebab belum terbukti.</p></div></div><div class="insight-item"><span class="insight-number">2</span><div><strong>Periksa sambungan pneumatik</strong><p>Mulai dari selang dan konektor manset, termasuk pengencang, dengan prosedur aman.</p></div></div><div class="insight-item"><span class="insight-number">3</span><div><strong>Ulangi uji L dengan SETTLE lebih lama</strong><p>Usulan berikutnya: ubah SETTLE menjadi 120 detik, RECORD tetap 60 detik. Jangan menganggap ini hasil yang sudah diuji.</p></div></div><div class="insight-item"><span class="insight-number">4</span><div><strong>Lanjut ke E/F setelah L lolos</strong><p>Mode tahan tekanan dan deflasi belum menjadi bukti keberhasilan pada rekaman ini.</p></div></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-label="Progres pengembangan kelompok">
+          <div class="section-heading"><div><div class="eyebrow">KONTEKS PENGEMBANGAN</div><h2>Progres prototipe</h2><p>Rekap manual laporan kelompok pekan ke-7, bukan data yang dikirim ESP32.</p></div><span class="source-label">PEKAN 7 · LAPORAN TIM</span></div>
+          <div class="project-progress-panel panel"><div class="progress-intro"><div><span class="progress-big">45<span>%</span></span><strong>Progres keseluruhan</strong><small>Akumulasi bobot capaian: 11 + 12 + 8 + 5 + 7 + 2 dari 100.</small></div><div class="progress-story"><strong>Prioritas teknis berikutnya</strong><p>Menindaklanjuti anomali minor pada pengujian integrasi, mengulang uji kebocoran, dan memastikan hasil sebelum masuk ke tahan tekanan serta deflasi terkendali.</p><span class="progress-tag">Status ini diisi manual, bukan monitoring live</span></div></div><div class="progress-bars">
+            <div><span>Perancangan <b>11/20</b></span><i><em style="width:55%"></em></i></div>
+            <div><span>Hardware <b>12/25</b></span><i><em style="width:48%"></em></i></div>
+            <div><span>Software <b>8/20</b></span><i><em style="width:40%"></em></i></div>
+            <div><span>Integrasi <b>5/15</b></span><i><em style="width:33.333%"></em></i></div>
+            <div><span>Pengujian <b>7/15</b></span><i><em style="width:46.667%"></em></i></div>
+            <div><span>Dokumentasi <b>2/5</b></span><i><em style="width:40%"></em></i></div>
+          </div></div>
+        </section>
+
+        <section class="section" id="history">
+          <div class="section-heading"><div><div class="eyebrow">DATA & EVALUASI</div><h2>Hasil dan riwayat pengujian</h2><p>Daftar hasil uji yang tersedia; tidak dibuatkan hasil pengujian fiktif.</p></div><button class="button secondary sm" id="exportCsvBtn"><svg class="ico"><use href="#i-download"/></svg> Ekspor CSV</button></div>
+          <div class="history-layout"><div class="panel history-panel"><div class="panel-heading"><div><h3>Riwayat uji</h3><p>Awalnya berisi satu rekaman yang diberikan kelompok.</p></div><span class="tiny-pill" id="historyCount">1 rekaman</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Pengujian</th><th>Target</th><th>Fase</th><th>Durasi RECORD</th><th>Hasil</th></tr></thead><tbody id="historyTbody"></tbody></table></div></div>
+          <div class="panel log-panel"><div class="panel-heading"><div><h3>Cuplikan data sensor</h3><p>Sampel terpilih dari log, bukan keseluruhan 300 titik.</p></div><span class="tiny-pill" id="logPointCount">— titik</span></div><div class="table-scroll log-scroll"><table class="data-table"><thead><tr><th>Fase</th><th>Waktu (s)</th><th>Tekanan (mmHg)</th></tr></thead><tbody id="samplesTbody"></tbody></table></div></div></div>
+        </section>
+
+        <section class="section" id="integration">
+          <div class="section-heading"><div><div class="eyebrow">SIAP DISAMBUNGKAN</div><h2>Integrasi ESP32 Web Server</h2><p>Frontend siap mengambil JSON dari endpoint yang nanti disediakan firmware teman lu.</p></div></div>
+          <div class="integration-grid"><div class="panel connect-panel"><div class="panel-heading"><div><h3>Pengaturan sumber data</h3><p>Tidak perlu edit tampilan saat API teman lu sudah tersedia.</p></div><span class="small-icon-circle"><svg class="ico"><use href="#i-link"/></svg></span></div>
+              <div class="mode-switch" role="group" aria-label="Mode sumber data"><button id="modeDemoBtn" class="mode-button selected" type="button">Data Rekaman</button><button id="modeLiveBtn" class="mode-button" type="button">Live ESP32 API</button></div>
+              <form id="apiForm" autocomplete="off"><label for="apiBaseUrl">Base URL ESP32</label><input type="url" id="apiBaseUrl" value="http://192.168.4.1" placeholder="http://192.168.4.1" spellcheck="false"><div class="field-help">Gunakan URL ESP32 saat Wi-Fi terkoneksi, atau URL proxy untuk pengembangan.</div><label for="apiStatusPath">Endpoint status</label><input id="apiStatusPath" value="/api/status" placeholder="/api/status" spellcheck="false"><label for="apiSamplesPath">Endpoint sampel grafik (opsional)</label><input id="apiSamplesPath" value="/api/samples" placeholder="/api/samples" spellcheck="false"><div class="form-actions"><button class="button primary" type="submit" id="saveApiBtn">Simpan pengaturan</button><button type="button" class="button secondary" id="testApiBtn"><svg class="ico"><use href="#i-refresh"/></svg> Tes koneksi</button></div><p class="form-feedback" id="apiFeedback" role="status"></p></form>
+            </div>
+            <div class="panel contract-panel"><div class="panel-heading"><div><h3>Kontrak API yang disarankan</h3><p>Nama field bisa dipetakan di <code>js/api.js</code>.</p></div></div><div class="endpoint-line"><span class="method get">GET</span><code id="endpointPreview">/api/status</code><span>Status terakhir</span></div><div class="endpoint-line"><span class="method get">GET</span><code>/api/samples</code><span>Array data grafik</span></div><div class="code-caption">Contoh respons <code>/api/status</code></div><pre class="code-example"><code>{
+  "pressure_mmHg": 129.648,
+  "target_mmHg": 150,
+  "phase": "RECORD",
+  "test_mode": "L",
+  "pump_on": false,
+  "valve_open": false,
+  "sensor_ok": true,
+  "leak_rate_mmHg_min": 8.5736,
+  "test_result": "GAGAL"
+}</code></pre><div class="notice small"><svg class="ico"><use href="#i-info"/></svg><div>File firmware yang dikirim sekarang masih memakai <strong>Serial Monitor</strong>, bukan HTTP API. Jadi mode Live perlu endpoint baru dari tim firmware. Kontrol fisik belum diaktifkan pada dashboard ini.</div></div></div></div>
+        </section>
+        <footer class="footer"><div><strong>PRESCUE</strong> Prototype NIBP Simulator · Kelompok 18</div><div>Monitoring berbasis data · UI dasar v0.1</div></footer>
+      </main>
+    </div>
+  </div>
+  <div class="toast" role="status" id="toast" hidden></div>
+  <script src="js/config.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/controls.js"></script>
+</body>
+</html>
