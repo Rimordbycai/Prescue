@@ -40,6 +40,15 @@
     // PRESCUE CONNECTED UI V6: jangan samakan simulator dengan ESP32 asli.
     return {
       connected:booleanOrNull(first(d,["connected","usb_connected"])),
+      wifi_connected:booleanOrNull(first(d,["wifi_connected"])),
+      usb_connected:booleanOrNull(first(d,["usb_connected"])),
+      integration_ready:booleanOrNull(first(d,["integration_ready"])),
+      pressure_source:first(d,["pressure_source"])||null,
+      api_mode:first(d,["api_mode"])||null,
+      firmware_ready:booleanOrNull(first(d,["firmware_ready"])),
+      operator_armed:booleanOrNull(first(d,["operator_armed"])),
+      wifi_error:first(d,["wifi_error"])||null,
+      usb_error:first(d,["usb_error"])||null,
       is_simulated:booleanOrNull(first(d,["is_simulated"])),
       remote_commands_enabled:booleanOrNull(first(d,["remote_commands_enabled"])),
       safety_ok:booleanOrNull(first(d,["safety_ok"])),
