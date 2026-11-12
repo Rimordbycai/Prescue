@@ -1,0 +1,841 @@
+/* PRESCUE UI REFINE — DESIGN ONLY */
+
+#features, #testing {
+  scroll-margin-top: 90px;
+}
+
+#features .section-heading,
+#testing .section-heading {
+  margin-bottom: 24px;
+}
+
+#features .section-heading h2,
+#testing .section-heading h2 {
+  font-size: clamp(22px, 2vw, 27px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: #102b50;
+}
+
+#features .section-heading p,
+#testing .section-heading p {
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+/* MODE & DAYA */
+
+.pf-grid {
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.pf-panel {
+  padding: 25px;
+  border-radius: 18px;
+  border: 1px solid #e2eaf5;
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(38, 71, 115, 0.035);
+}
+
+.pf-grid > .pf-panel:first-child {
+  background: linear-gradient(155deg, #f6faff 0%, #ffffff 48%);
+  border-color: #d9e7fb;
+}
+
+.pf-heading {
+  margin-bottom: 12px;
+}
+
+.pf-heading h3,
+.pf-oled h3 {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.35px;
+  color: #17345b;
+}
+
+.pf-chip {
+  background: #ebf3ff;
+  color: #326bbd;
+  font-size: 10px;
+  padding: 7px 12px;
+  border-radius: 100px;
+  letter-spacing: 0.2px;
+}
+
+.pf-note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #8090a8;
+}
+
+.pf-presets {
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.pf-presets button {
+  position: relative;
+  min-height: 48px;
+  border-radius: 12px;
+  background: #f7f9fd;
+  border: 1px solid #e3eaf4;
+  color: #445976;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background .18s, border-color .18s, box-shadow .18s;
+}
+
+.pf-presets button:not(.pf-selected):hover {
+  background: #f0f5fc;
+  border-color: #c3d7ef;
+  color: #275c9e;
+}
+
+.pf-presets button.pf-selected {
+  background: #e9f2ff;
+  border-color: #4c85e4;
+  color: #2164cc;
+  box-shadow: inset 0 0 0 1px rgba(76,133,228,.15);
+}
+
+.pf-presets button.pf-selected::after {
+  content: "✓";
+  position: absolute;
+  right: 12px;
+  font-size: 12px;
+}
+
+.pf-fields {
+  gap: 12px;
+}
+
+.pf-fields label,
+.pf-static-label {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #506483;
+}
+
+.pf-fields input,
+.pf-static-label input {
+  padding: 13px;
+  min-height: 45px;
+  border-radius: 11px;
+  border-color: #dde7f3;
+  font-size: 14px;
+  font-weight: 700;
+  color: #17345b;
+  background: #ffffff;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.pf-fields input:focus,
+.pf-static-label input:focus {
+  outline: none;
+  border-color: #4485eb;
+  box-shadow: 0 0 0 3px rgba(68,133,235,.12);
+}
+
+.pf-action {
+  min-height: 43px;
+  border-radius: 10px;
+  padding-inline: 18px;
+  font-size: 11.5px;
+  font-weight: 750;
+}
+
+.pf-feedback {
+  display: block;
+  padding: 12px 14px;
+  margin-top: 15px;
+  border: 1px solid #e1ebf9;
+  border-radius: 11px;
+  background: #f5f9ff;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #426b9e;
+}
+
+.pf-reading {
+  padding: 17px 0;
+  gap: 20px;
+  font-size: 12px;
+  color: #677d98;
+}
+
+.pf-reading strong {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #2b568c;
+}
+
+.pf-separator {
+  margin-top: 16px;
+}
+
+/* OLED PREVIEW */
+
+.pf-oled {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 1.05fr);
+  align-items: center;
+  gap: 28px;
+  padding: 28px 32px;
+  min-height: 230px;
+  border-radius: 18px;
+  background: linear-gradient(110deg, #f2f7ff, #ffffff 55%);
+  border: 1px solid #dce9f8;
+}
+
+.pf-oled > div:first-child {
+  max-width: 340px;
+}
+
+.pf-oled h3 {
+  margin-bottom: 10px;
+  font-size: 19px;
+}
+
+.pf-oled .pf-note {
+  font-size: 12px;
+  max-width: 320px;
+}
+
+.pf-oled > div:first-child::after {
+  content: "DISPLAY PREVIEW  /  128 × 64";
+  display: inline-block;
+  margin-top: 14px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: #e6effc;
+  color: #4a74ac;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+}
+
+.pf-screen {
+  width: 100%;
+  max-width: 455px;
+  justify-self: end;
+  min-height: 185px;
+  padding: 20px 23px;
+  border: 7px solid #263e57;
+  border-radius: 17px;
+  background: linear-gradient(150deg, #081c2c, #102c41);
+  box-shadow: 0 12px 25px rgba(14,39,70,.14);
+  color: #b7f3ff;
+  gap: 10px;
+}
+
+.pf-screen-top {
+  font-size: 10px;
+  opacity: .85;
+}
+
+.pf-screen strong {
+  font-size: clamp(30px, 3vw, 38px);
+  font-weight: 800;
+  letter-spacing: 2px;
+  line-height: 1.25;
+}
+
+.pf-screen small {
+  font-size: 9.5px;
+  opacity: .7;
+  line-height: 1.6;
+}
+
+/* PENGUJIAN */
+
+#testing .tests-grid {
+  gap: 14px;
+}
+
+#testing .test-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 225px;
+  padding: 21px;
+  border-radius: 16px;
+  border-color: #e2eaf5;
+  box-shadow: 0 5px 22px rgba(38,71,115,.035);
+  transition: transform .2s, box-shadow .2s;
+}
+
+#testing .test-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: #6ba5f3;
+}
+
+#testing .test-card:nth-child(2)::before {
+  background: #ea8194;
+}
+
+#testing .test-card:nth-child(3)::before {
+  background: #5ac7a2;
+}
+
+#testing .test-card:nth-child(4)::before {
+  background: #a6b4c6;
+}
+
+#testing .test-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 11px 28px rgba(38,71,115,.075);
+}
+
+#testing .test-mark {
+  margin-top: 19px;
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  font-size: 17px;
+}
+
+#testing .test-card h3 {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #17365d;
+}
+
+#testing .test-card p {
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: #788ba3;
+}
+
+#testing .test-data {
+  padding-top: 14px;
+}
+
+#testing .test-data strong {
+  font-size: 12px;
+}
+
+/* CONTROL PANEL */
+
+#testing .pc-controls {
+  padding: 23px 25px;
+  margin: 18px 0;
+  border-radius: 17px;
+  border: 1px solid #dce8f8;
+  background: linear-gradient(140deg, #ffffff, #f9fbff);
+}
+
+#testing .pc-controls .panel-heading h3 {
+  font-size: 15px;
+}
+
+#testing .pc-controls .panel-heading p {
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+#testing .pc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin: 16px 0;
+}
+
+#testing .pc-actions .button {
+  min-height: 43px;
+  border-radius: 10px;
+  padding: 0 18px;
+  font-size: 11.5px;
+  font-weight: 750;
+}
+
+#testing .pc-actions .pc-stop {
+  height: 43px;
+  font-size: 11.5px;
+}
+
+#testing .pc-feedback {
+  padding: 13px 15px;
+  border-radius: 11px;
+  line-height: 1.6;
+}
+
+#testing .test-info-grid {
+  gap: 16px;
+}
+
+#testing .test-info-grid > .panel {
+  border-radius: 17px;
+  padding: 24px;
+  border-color: #e2eaf5;
+}
+
+#testing .detail-table > div {
+  padding: 12px 0;
+  font-size: 11.5px;
+}
+
+#testing .insight-list {
+  gap: 13px;
+}
+
+#testing .insight-item {
+  padding: 12px;
+  border-radius: 11px;
+  background: #f7faff;
+}
+
+#testing .insight-item strong {
+  font-size: 12px;
+}
+
+#testing .insight-item p {
+  font-size: 11px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1150px) {
+  #testing .tests-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pf-oled {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 850px) {
+  .pf-grid,
+  .pf-oled,
+  #testing .test-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-screen {
+    justify-self: stretch;
+    max-width: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .pf-panel,
+  #testing .test-info-grid > .panel,
+  #testing .pc-controls {
+    padding: 19px;
+  }
+
+  .pf-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .pf-fields input {
+    padding: 10px 7px;
+    font-size: 13px;
+  }
+
+  .pf-oled {
+    padding: 22px;
+    gap: 20px;
+  }
+
+  #testing .tests-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #testing .pc-actions .button {
+    flex: 1 1 140px;
+  }
+
+  #testing .test-card {
+    min-height: 190px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #testing .test-card,
+  .pf-presets button {
+    transition: none;
+  }
+}
+
+/* PRESCUE CONTROL PANEL REDESIGN V3 */
+
+#testing .pc-controls {
+  padding: 28px;
+  border-radius: 20px;
+  border: 1px solid #dae6f6;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 32px rgba(35, 75, 125, 0.045);
+}
+
+/* Header */
+
+#testing .pc-controls .panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+#testing .pc-controls .panel-heading h3 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #12345f;
+  letter-spacing: -0.5px;
+}
+
+#testing .pc-controls .panel-heading p {
+  margin-top: 7px;
+  font-size: 12px;
+  color: #8193ac;
+  line-height: 1.7;
+}
+
+#testing .pc-state {
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid #d8e7ff;
+  background: #eaf3ff;
+  color: #32639c;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Target tekanan dan API */
+
+#testing .pc-controls .pc-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 18px;
+  margin-bottom: 22px;
+  border: 1px solid #e2ebf7;
+  border-radius: 15px;
+  background: #f1f6fd;
+}
+
+#testing .pc-controls .pc-form label {
+  width: auto;
+  font-size: 12px;
+  font-weight: 750;
+  color: #35567f;
+}
+
+#testing .pc-controls .pc-form input {
+  width: 160px;
+  height: 49px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  border: 1px solid #cbdcf3;
+  border-radius: 11px;
+  background: white;
+  color: #173b70;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+#testing .pc-controls .pc-form input:focus {
+  outline: none;
+  border-color: #4084ed;
+  box-shadow: 0 0 0 3px rgba(64, 132, 237, 0.12);
+}
+
+#testing #pcCheck {
+  min-height: 49px;
+  padding: 0 22px;
+  border: 1px solid #b8d4fa;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #2166bb;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+/* Empat tombol utama: sama lebar */
+
+#testing .pc-controls .pc-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  width: 100%;
+  margin: 0 0 20px;
+}
+
+#testing .pc-controls .pc-actions .button,
+#testing .pc-controls .pc-actions .pc-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  height: auto;
+  box-sizing: border-box;
+  padding: 14px 12px;
+  border-radius: 13px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    transform .18s ease,
+    box-shadow .18s ease;
+}
+
+/* G - Isi tekanan */
+
+#testing .pc-actions [data-pc-command="G"] {
+  background: linear-gradient(135deg, #4b90fa, #2162d6);
+  border: 1px solid #2e72e4;
+  color: #ffffff;
+  box-shadow: 0 6px 15px rgba(46, 114, 228, 0.16);
+}
+
+/* L - Uji kebocoran */
+
+#testing .pc-actions [data-pc-command="L"] {
+  background: #edf5ff;
+  border: 1px solid #a8cafa;
+  color: #2265b9;
+}
+
+/* O - Buang tekanan */
+
+#testing .pc-actions [data-pc-command="O"] {
+  background: #fff5f5;
+  border: 1px solid #f5bfc7;
+  color: #ca4659;
+}
+
+/* X - Hentikan proses */
+
+#testing .pc-controls .pc-actions .pc-stop {
+  background: #ffe9ec;
+  border: 1px solid #eda9b5;
+  color: #b52f46;
+}
+
+#testing .pc-controls .pc-actions .button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 17px rgba(40, 80, 130, 0.10);
+}
+
+#testing .pc-controls .pc-actions .button:focus-visible,
+#testing #pcCheck:focus-visible {
+  outline: 3px solid rgba(46, 114, 228, 0.35);
+  outline-offset: 3px;
+}
+
+/* Kotak informasi */
+
+#testing .pc-controls .pc-feedback {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 53px;
+  padding: 16px 18px;
+  margin: 0 0 16px;
+  border: 1px solid #d8e6f8;
+  border-radius: 12px;
+  background: #edf5ff;
+  color: #426a9a;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.7;
+}
+
+#testing .pc-controls .pc-warning {
+  margin: 0;
+  padding: 16px 2px 0;
+  border-top: 1px solid #e7edf5;
+  color: #8293ab;
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+/* Tablet */
+
+@media (max-width: 1150px) {
+  #testing .pc-controls .pc-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  #testing .pc-controls {
+    padding: 19px;
+  }
+
+  #testing .pc-controls .panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #testing .pc-controls .pc-form {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  #testing .pc-controls .pc-form label {
+    width: 100%;
+  }
+
+  #testing .pc-controls .pc-form input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  #testing #pcCheck {
+    width: 100%;
+  }
+
+  #testing .pc-controls .pc-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  #testing .pc-controls .pc-actions .button {
+    min-height: 65px;
+    font-size: 11.5px;
+    padding: 12px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #testing .pc-controls .pc-actions .button {
+    transition: none;
+  }
+}
+
+/* PRESCUE SERIAL COMMAND PANEL V4 */
+
+#testing .pc-serial-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 17px 20px;
+  border: 1px solid #cbdff8;
+  border-radius: 14px;
+  background: #f0f6ff;
+}
+
+#testing .pc-preview-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .9px;
+  color: #6c8bb3;
+}
+
+#testing #pcCommandText {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: #225ca9;
+}
+
+#testing #pcCopy {
+  min-height: 42px;
+  white-space: nowrap;
+  border-radius: 10px;
+  font-weight: 750;
+}
+
+#testing .pc-serial-hint {
+  margin: 12px 2px 18px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #8294ad;
+}
+
+#testing .pc-extra {
+  margin: 20px 0 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e4ebf5;
+}
+
+#testing .pc-extra h4 {
+  margin: 0 0 5px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #193b66;
+}
+
+#testing .pc-extra > p {
+  margin: 0 0 15px;
+  font-size: 11px;
+  color: #8294ad;
+}
+
+#testing .pc-extra-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#testing .pc-extra-grid button {
+  min-height: 47px;
+  padding: 11px 13px;
+  border: 1px solid #dbe6f4;
+  border-radius: 11px;
+  background: #f7faff;
+  color: #31557f;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+
+#testing .pc-extra-grid button:hover {
+  background: #e9f2ff;
+  border-color: #9dc0f2;
+}
+
+#testing .pc-extra-grid button:focus-visible {
+  outline: 3px solid #a8cbff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  #testing .pc-extra-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  #testing .pc-serial-preview {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #testing #pcCopy {
+    width: 100%;
+  }
+
+  #testing .pc-extra-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

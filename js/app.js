@@ -25,7 +25,7 @@
       valueTag("statusEsp","Belum live","neutral");valueTag("statusSensor","Terbaca di log","green");
       valueTag("statusPump","OFF (akhir uji)","neutral");valueTag("statusValve","Tertutup (akhir uji)","neutral");
     }else{
-      valueTag("statusEsp",latestError?"Terputus":"Terhubung",latestError?"red":"green");
+      valueTag("statusEsp",s.is_simulated===true?"Simulasi":latestError?"Terputus":"Terhubung",s.is_simulated===true?"neutral":latestError?"red":"green");
       valueTag("statusSensor",s.sensor_ok===true?"Terbaca":s.sensor_ok===false?"Belum siap":"Tidak dikirim",s.sensor_ok===true?"green":s.sensor_ok===false?"red":"neutral");
       valueTag("statusPump",s.pump_on===null?"Tidak dikirim":s.pump_on?"ON":"OFF",s.pump_on?"green":"neutral");
       valueTag("statusValve",s.valve_open===null?"Tidak dikirim":s.valve_open?"Terbuka":"Tertutup",s.valve_open?"green":"neutral");
@@ -36,7 +36,7 @@
     setText("dataSourceLabel",isDemo?"REKAMAN PENGUJIAN":"LIVE · ESP32 API");
     setText("graphSubtitle",isDemo?"Cuplikan titik hasil pengujian G dan L · bukan live":"Data realtime dari ESP32 (jika dikirim firmware)");
     setText("chartStatusLabel",isDemo?"Cuplikan data rekaman":"Menunggu/menerima telemetry live");
-    $("chartDot").className=`chart-live-dot${!isDemo&&!latestError?" on":""}`;
+    $("chartDot").className=`chart-live-dot${!isDemo&&!latestError&&s.is_simulated!==true?" on":""}`;
     setText("chartSamplesCount",`${dataPoints.length} titik ditampilkan`);
     $("replayBtn").disabled=!isDemo;
   }
@@ -64,6 +64,7 @@
       n.innerHTML='<svg class="ico"><use href="#i-info"/></svg><div><strong>Data pengujian terakhir (rekaman).</strong><span>Angka dan grafik adalah cuplikan hasil tim, bukan koneksi langsung. Sumber live dapat diaktifkan pada menu Integrasi API.</span></div>';
     }else{
       n.className="notice info";
+      if(status.is_simulated===true){n.innerHTML='<svg class="ico"><use href="#i-info"/></svg><div><strong>SIMULASI API LOKAL.</strong> Nilai dan grafik bukan pembacaan ESP32. Tidak ada pengendalian perangkat fisik.</div>';return;}
       const first=latestError?`<strong>ESP32 belum terhubung:</strong> ${escapeText(latestError)}`:(status.connected===true&&!Number.isFinite(status.pressure_mmHg)?"<strong>ESP32 terhubung, sensor belum siap.</strong> Menunggu pembacaan tekanan dari rangkaian.":"<strong>Mode Live ESP32 aktif.</strong> Pembacaan melalui HTTP GET.");
       n.innerHTML=`<svg class="ico"><use href="#i-info"/></svg><div>${first}</div>`;
     }
@@ -74,7 +75,8 @@
     polling=true;
     try{
       const s=await api.getLiveStatus();
-      latestError=null;status=s;lastLiveUpdate=Date.now();setConnection("is-live","ESP32 · Terhubung");
+      if(s.connected!==true)throw new Error("API belum mengonfirmasi koneksi ESP32");
+      latestError=null;status=s;lastLiveUpdate=Date.now();setConnection(s.is_simulated===true?"is-demo":"is-live",s.is_simulated===true?"SIMULASI · Bukan ESP32":"ESP32 · Terhubung");
       const incoming=Array.isArray(s.samples)?api.normalizeSamples(s.samples):null;
       if(incoming&&incoming.length){dataPoints=incoming;lastLiveSampleSecond=Math.max(...incoming.map(x=>x.elapsed));}
       else{
@@ -88,7 +90,7 @@
         try{const a=await api.getLiveSamples();if(a&&a.length&&mode==="live"){dataPoints=a;lastLiveSampleSecond=Math.max(...a.map(x=>x.elapsed));renderAll();}}
         catch(_){/* opsional: jangan menyamarkan status endpoint utama karena /samples belum dibuat */}
       }
-    }catch(e){latestError=e.message||"Koneksi gagal";setConnection("is-error","ESP32 · Terputus");valueTag("statusEsp","Terputus","red");setText("metricPressureFoot","Koneksi putus; nilai terakhir bila tersedia");setText("chartStatusLabel","Terputus — data terakhir, bukan live aktif");$("chartDot").className="chart-live-dot";setText("dataSourceLabel","LIVE · TIDAK TERHUBUNG");renderModeNotice();}
+    }catch(e){latestError=e.message||"Koneksi gagal";status={...status,pressure_mmHg:null,target_mmHg:null,phase:null,sensor_ok:null,pump_on:null,valve_open:null};renderStatus(status);setConnection("is-error","ESP32 · Terputus");setText("metricPressure","—");valueTag("statusEsp","Terputus","red");setText("metricPressureFoot","Koneksi putus; nilai terakhir bila tersedia");setText("chartStatusLabel","Terputus — data terakhir, bukan live aktif");$("chartDot").className="chart-live-dot";setText("dataSourceLabel","LIVE · TIDAK TERHUBUNG");renderModeNotice();}
     finally{polling=false;}
   }
   let liveStart=Date.now();

@@ -8,6 +8,7 @@
   <title>PRESCUE — Dashboard NIBP Simulator</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/prescue-ui-refine.css">
 </head>
 <body>
   <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -119,19 +120,50 @@
 
           <!-- PRESCUE COMMAND PANEL V1: read-only until firmware enables remote control -->
           <div class="panel pc-controls" id="pcControls">
-            <div class="panel-heading"><div><h3>Kontrol Pengujian ESP32</h3><p>Perintah dari website menggantikan input Serial Monitor setelah API firmware tersedia.</p></div><span class="pc-state" id="pcState">Belum terhubung</span></div>
+            <div class="panel-heading"><div><h3>Perintah Pengujian ESP32</h3><p>Mode Rekaman menyiapkan perintah Serial. Mode Live dapat mengirim perintah hanya jika firmware dan pengaman sudah memberikan izin.</p></div><span class="pc-state" id="pcState">Firmware Serial</span></div>
             <div class="pc-form">
               <label for="pcTarget">Target tekanan (mmHg)</label>
               <input id="pcTarget" type="number" min="20" max="150" step="1" value="150" inputmode="numeric">
-              <button type="button" class="button secondary" id="pcCheck">Periksa kesiapan API</button>
+              <button type="button" class="button secondary" id="pcCheck">Cek koneksi API</button>
             </div>
             <div class="pc-actions">
               <button type="button" class="button primary" data-pc-command="G">G · Isi tekanan</button>
               <button type="button" class="button secondary" data-pc-command="L">L · Uji kebocoran</button>
               <button type="button" class="button secondary pc-vent" data-pc-command="O">O · Buang tekanan</button>
             </div>
-            <p id="pcFeedback" class="pc-feedback" role="status" aria-live="polite">Kontrol web belum aktif. Koneksi dan izin harus dikonfirmasi oleh firmware ESP32.</p>
-            <p class="pc-warning">Uji hanya pada rangkaian tanpa pasien. Pengaman tekanan dan pelepasan tekanan darurat wajib bekerja mandiri di firmware/hardware, bukan bergantung pada website.</p>
+
+          <!-- PRESCUE SERIAL COMMAND PANEL V4 -->
+          <div class="pc-serial-preview" aria-live="polite">
+            <div>
+              <span class="pc-preview-label">PERINTAH SERIAL TERPILIH</span>
+              <code id="pcCommandText">—</code>
+            </div>
+            <button type="button" class="button secondary" id="pcCopy">
+              Salin perintah
+            </button>
+          </div>
+
+          <p class="pc-serial-hint">
+            Mode Rekaman: tombol membuat perintah Serial. Mode Live: perintah hanya dikirim setelah pemeriksaan pengaman firmware dan konfirmasi operator.
+          </p>
+
+          <div class="pc-extra">
+            <h4>Perintah tambahan firmware terbaru</h4>
+            <p>Monitoring, preset denyut, dan pengujian lanjutan.</p>
+
+            <div class="pc-extra-grid">
+              <button type="button" data-pc-serial="T">T · Baca tekanan</button>
+              <button type="button" data-pc-serial="S">S · Pantau sensor</button>
+              <button type="button" data-pc-serial="N:1">N:1 · Normal</button>
+              <button type="button" data-pc-serial="N:2">N:2 · Hipertensi</button>
+              <button type="button" data-pc-serial="N:3">N:3 · Hipotensi</button>
+              <button type="button" data-pc-serial="Q:40">Q:40 · Uji denyut</button>
+              <button type="button" data-pc-serial="U">U · Uji otomatis</button>
+            </div>
+          </div>
+
+            <p id="pcFeedback" class="pc-feedback" role="status" aria-live="polite">Pilih tombol untuk menyiapkan perintah Serial. Belum ada komunikasi kontrol langsung dengan ESP32.</p>
+            <p class="pc-warning">Firmware terbaru masih menggunakan Serial Monitor. X menghentikan proses dan menutup katup, bukan membuang tekanan. Firmware memiliki batas darurat 300 mmHg yang wajib ditinjau dan divalidasi sebelum pengujian perangkat. Gunakan rangkaian tanpa pasien.</p>
           </div>
           <div class="test-info-grid">
             <div class="panel test-summary"><div class="panel-heading"><div><h3>Detail uji kebocoran terakhir</h3><p>Data aktual dari output `L:150` yang dibagikan tim.</p></div><span class="result-pill fail" id="resultBadge"><svg class="ico"><use href="#i-alert"/></svg> GAGAL</span></div>

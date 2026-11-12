@@ -37,8 +37,13 @@
     if(!d||typeof d!=="object"||Array.isArray(d))throw new Error("Endpoint status tidak mengembalikan objek JSON");
     const pressure=numberOrNull(first(d,["pressure_mmHg","pressure_mmhg","pressure","T_mmHg"]));
     if(pressure===null && !["pressure_mmHg","pressure_mmhg","pressure","T_mmHg"].some(k=>Object.prototype.hasOwnProperty.call(d,k)))throw new Error("Field tekanan tidak ditemukan. Sesuaikan mapping di js/api.js");
+    // PRESCUE CONNECTED UI V6: jangan samakan simulator dengan ESP32 asli.
     return {
       connected:booleanOrNull(first(d,["connected","usb_connected"])),
+      is_simulated:booleanOrNull(first(d,["is_simulated"])),
+      remote_commands_enabled:booleanOrNull(first(d,["remote_commands_enabled"])),
+      safety_ok:booleanOrNull(first(d,["safety_ok"])),
+      busy:booleanOrNull(first(d,["busy"])),
       pressure_mmHg:pressure,
       target_mmHg:numberOrNull(first(d,["target_mmHg","target_pressure_mmHg","target_pressure","target"])),
       phase:first(d,["phase","fase","stage"])||null,

@@ -1,179 +1,378 @@
-/* PRESCUE live command UI V2: requires terminal ARM + firmware Q diagnostics. */
+/* PRESCUE SERIAL COMMAND UI V4 */
 (function () {
   'use strict';
+
   const api = window.PRESCUE_API;
-  const byId = (id) => document.getElementById(id);
+  const byId = id => document.getElementById(id);
   const panel = byId('pcControls');
-  if (!panel || !api) return;
-  const buttons = Array.from(panel.querySelectorAll('[data-pc-command]'));
-  const actions = panel.querySelector('.pc-actions');
-  const stopButton = document.createElement('button');
-  stopButton.type = 'button';
-  stopButton.id = 'pcStop';
-  stopButton.className = 'button secondary pc-stop';
-  stopButton.textContent = 'X · Hentikan proses';
-  stopButton.title = 'Mengirim x untuk membatalkan proses. Ini TIDAK membuang tekanan.';
-  stopButton.disabled = false;
-  if (actions) actions.appendChild(stopButton);
+
+  if (!panel) return;
 
   const targetInput = byId('pcTarget');
-  targetInput.min = '20';
-  targetInput.max = '150';
-  targetInput.step = '1';
-  let verified = false;
-  let checking = false;
+  const commandText = byId('pcCommandText');
+  const feedbackBox = byId('pcFeedback');
+  const state = byId('pcState');
+  const actions = panel.querySelector('.pc-actions');
+
+  const stop = document.createElement('button');
+  stop.type = 'button';
+  stop.className = 'button secondary pc-stop';
+  stop.id = 'pcStop';
+  stop.textContent = 'X · Hentikan proses';
+  actions.appendChild(stop);
+
+  let selectedCommand = '';
+
+  function feedback(message) {
+    feedbackBox.textContent = message;
+  }
+
+  function showCommand(command, description) {
+    selectedCommand = command;
+    commandText.textContent = command;
+
+    feedback(
+      description +
+      ' Ini hanya pratinjau perintah. ' +
+      'Tidak ada perintah yang dikirim ke ESP32.'
+    );
+  }
+
+  function target() {
+    const raw = targetInput.value.trim();
+    const n = Number(raw);
+
+    if (
+      !/^[0-9]+$/.test(raw) ||
+      !Number.isInteger(n) ||
+      n < 20 ||
+      n > 150
+    ) {
+      feedback(
+        'Target dashboard harus bilangan bulat 20–150 mmHg. ' +
+        'Rentang ini lebih konservatif daripada parser firmware.'
+      );
+      return null;
+    }
+
+    return n;
+  }
+
+
+  // PRESCUE LIVE COMMAND GATE V5
+  // Kontrol fisik hanya melalui firmware yang mengizinkan.
   let sending = false;
-  let current = null;
-  const live = () => api.getSettings().mode === 'live';
-  function feedback(text) { byId('pcFeedback').textContent = text; }
-  function render() {
-    const active = live() && verified && !checking && !sending &&
-      current?.connected &&
-      current?.remote_commands_enabled === true &&
-      current?.sensor_ok === true &&
-      current?.safety_ok === true &&
-      current?.busy !== true &&
-      current?.is_simulated !== true;
 
-    for (const button of buttons) {
-      const cmd = button.dataset.pcCommand;
-      const permitted = active &&
-        (cmd === 'O' || current?.can_pressurize === true);
+  async function runLiveCommand(code) {
+    if (!api || sending) return;
 
-      button.disabled = false;
-      button.title = permitted
-        ? 'Perintah tersedia setelah konfirmasi operator'
-        : 'Klik untuk mengetahui status kesiapan perangkat';
-    }
+    let command;
 
-    stopButton.disabled = false;
-    stopButton.title = 'Klik untuk memeriksa apakah ada proses yang dapat dihentikan';
-
-    const stateText = !live()
-      ? 'Mode Rekaman · Kontrol fisik tidak dijalankan'
-      : !current?.connected
-      ? 'ESP32 belum terhubung'
-      : current?.busy
-      ? 'Pengujian berjalan'
-      : active
-      ? 'Siap menerima perintah'
-      : 'Kontrol fisik menunggu izin firmware';
-
-    byId('pcState').textContent = stateText;
-  }
-
-  async function refresh(showFeedback = false) {
-    if (checking) return;
-    if (!live()) {
-      current = null;
-      verified = false;
-      if (showFeedback) feedback('Pilih Live ESP32 API terlebih dahulu.');
-      render();
+    if (code === 'G' || code === 'L') {
+      const n = target();
+      if (n === null) return;
+      command = code + ':' + n;
+    } else if (code === 'O' || code === 'X') {
+      command = code;
+    } else {
+      feedback('Perintah tidak dikenal.');
       return;
     }
-    checking = true;
-    render();
-    try {
-      const raw = await api.requestJSON(api.getSettings().statusPath);
-      current = raw && typeof raw.data === 'object' && raw.data ? raw.data : raw;
-      if (current.is_simulated === true) throw new Error('API simulasi ditolak.');
-      verified = current.connected === true && current.remote_commands_enabled === true &&
-                 current.sensor_ok === true && current.safety_ok === true;
-      if (showFeedback) {
-        if (current.busy) feedback('Pengujian berjalan; pantau status. Tombol X hanya membatalkan, tidak membuang tekanan.');
-        else if (verified) feedback('Izin operator dan diagnostik firmware OK. Pastikan rangkaian TANPA pasien, katup dan manometer diawasi.');
-        else feedback('Belum siap: firmware WEB_SAFE, sensor dan ARM di terminal harus terpenuhi. Klik Periksa lagi setelah ARM.');
-      }
-    } catch (error) {
-      current = null;
-      verified = false;
-      if (showFeedback) feedback(`Kontrol terkunci: ${error.message}`);
-    } finally {
-      checking = false;
-      render();
-    }
-  }
-  byId('pcCheck').addEventListener('click', () => refresh(true));
-  for (const button of buttons) {
-    button.addEventListener('click', async () => {
-      if (sending) {
-        feedback('Tunggu proses perintah sebelumnya selesai.');
-        return;
-      }
-      if (!live()) {
-        feedback('Mode Rekaman: tombol dapat diklik, tetapi tidak mengirim perintah ke ESP32.');
-        return;
-      }
-      const code = button.dataset.pcCommand;
-      const raw = targetInput.value.trim();
-      const target = Number(raw);
-      if (code !== 'O' && (!/^\d+$/.test(raw) || !Number.isInteger(target) || target < 20 || target > 150)) {
-        feedback('Target wajib bilangan bulat 20–150 mmHg.');
-        return;
-      }
-      const command = code === 'O' ? 'O' : `${code}:${target}`;
-      await refresh(false);
-      if (!verified || !live() || current?.busy || (code !== 'O' && current?.can_pressurize !== true)) {
-        feedback('Perintah tidak dikirim: koneksi, sensor, atau izin operator sudah berubah.');
-        return;
-      }
-      const message = code === 'O'
-        ? 'Buka katup maksimal 15 detik? Pastikan alat tanpa pasien, operator mengawasi dan pelepasan tekanan aman.'
-        : `Kirim ${command} ke ESP32 untuk mengaktifkan rangkaian pneumatik? Pastikan tanpa pasien dan stop fisik tersedia.`;
-      if (!window.confirm(message)) return;
-      sending = true;
-      render();
-      try {
-        // Request is still revalidated by bridge immediately before UART write.
-        const result = await api.sendCommand(command);
-        if (result?.accepted !== true) throw new Error(result?.error || 'Server tidak memberi konfirmasi accepted');
-        feedback(`${command} DIKIRIM. Ini bukan tanda uji berhasil. Pantau grafik dan siapkan stop fisik.`);
-        verified = false;
-      } catch (error) {
-        feedback(`Perintah GAGAL/belum pasti dikirim: ${error.message}. Periksa keadaan alat sebelum mencoba lagi.`);
-      } finally {
-        sending = false;
-        await refresh(false);
-        render();
-      }
-    });
-  }
-  stopButton.addEventListener('click', async () => {
-    if (sending) {
-      feedback('Tunggu proses perintah sebelumnya selesai.');
-      return;
-    }
-    if (!live()) {
-      feedback('Mode Rekaman: tidak ada proses fisik yang dijalankan.');
-      return;
-    }
-    await refresh(false);
-    if (!current?.connected || !current?.busy) {
-      feedback('Tidak ada proses aktif yang dapat dihentikan dari dashboard.');
-      return;
-    }
-    if (!window.confirm('Kirim x untuk HENTIKAN proses? x mematikan pompa tetapi TIDAK mengosongkan tekanan. Awasi pelepasan fisik.')) return;
+
     sending = true;
-    render();
+    feedback('Memeriksa koneksi dan pengaman ESP32...');
+    state.textContent = 'Memeriksa izin firmware...';
+
     try {
-      const result = await api.sendCommand('X');
-      if (result?.accepted !== true) throw new Error(result?.error || 'Tidak diterima');
-      feedback('Perintah x dikirim. Tunggu konfirmasi DIHENTIKAN di monitoring dan periksa tekanan sisa secara fisik.');
+      const raw = await api.requestJSON(
+        api.getSettings().statusPath
+      );
+
+      const d =
+        raw &&
+        raw.data &&
+        typeof raw.data === 'object'
+          ? raw.data
+          : raw;
+
+      if (d.connected !== true || d.is_simulated === true) {
+        throw new Error(
+          'ESP32 tidak terverifikasi sebagai perangkat fisik.'
+        );
+      }
+
+      if (d.remote_commands_enabled !== true) {
+        throw new Error(
+          'ESP32 terhubung, tetapi firmware ' +
+          'belum mengizinkan kontrol jarak jauh.'
+        );
+      }
+
+      if (d.safety_ok !== true) {
+        throw new Error(
+          'Firmware belum mengonfirmasi pengaman siap.'
+        );
+      }
+
+      if (code === 'G' || code === 'L') {
+        if (
+          d.sensor_ok !== true ||
+          d.can_pressurize !== true
+        ) {
+          throw new Error(
+            'Sensor atau izin pengisian tekanan belum siap.'
+          );
+        }
+      }
+
+      if (code === 'X') {
+        if (d.busy !== true) {
+          throw new Error(
+            'Firmware tidak melaporkan proses aktif. ' +
+            'Gunakan pengaman fisik jika kondisi alat tidak pasti.'
+          );
+        }
+      } else if (d.busy === true) {
+        throw new Error(
+          'Pengujian masih berlangsung. ' +
+          'Perintah baru tidak dikirim.'
+        );
+      }
+
+      const description = code === 'X'
+        ? 'Hentikan proses? X bukan pelepasan tekanan darurat.'
+        : code === 'O'
+        ? 'Buka katup? Pastikan pelepasan tekanan aman.'
+        : 'Jalankan ' + command +
+          '? Pastikan rangkaian tanpa pasien, ' +
+          'pengaman tekanan independen dan STOP fisik ' +
+          'sudah diuji.';
+
+      if (!window.confirm(description)) {
+        feedback('Dibatalkan. Perintah tidak dikirim.');
+        return;
+      }
+
+      if (api.getSettings().mode !== 'live') {
+        throw new Error('Mode Live sudah berubah.');
+      }
+
+      const result = await api.sendCommand(command);
+
+      if (result?.accepted !== true) {
+        throw new Error(
+          result?.error ||
+          'Firmware tidak mengonfirmasi perintah.'
+        );
+      }
+
+      state.textContent = 'Perintah diterima API';
+
+      feedback(
+        command +
+        ' diterima API. Ini bukan bukti pengujian berhasil. ' +
+        'Pantau sensor dan kondisi fisik alat.'
+      );
+
     } catch (error) {
-      feedback('Hentikan via website gagal: ' + error.message + '. Gunakan stop fisik.');
+      state.textContent = 'Kontrol belum siap';
+
+      feedback(
+        'Perintah ' + command +
+        ' tidak dikonfirmasi: ' + error.message +
+        ' Jika terjadi timeout, periksa kondisi alat ' +
+        'sebelum mencoba kembali.'
+      );
     } finally {
       sending = false;
-      await refresh(false);
+    }
+  }
+
+  function chooseMain(code) {
+    if (code === 'O') {
+      showCommand(
+        'O',
+        'O membuka katup maksimal 15 detik. ' +
+        'Perintah x dapat menghentikan pembukaan.'
+      );
+      return;
+    }
+
+    const n = target();
+    if (n === null) return;
+
+    if (code === 'G') {
+      showCommand(
+        'G:' + n,
+        'G mengisi tekanan sampai target menggunakan duty terakhir. ' +
+        'Firmware memiliki batas waktu pengisian 90 detik.'
+      );
+    }
+
+    if (code === 'L') {
+      showCommand(
+        'L:' + n,
+        'L menjalankan pengisian, SETTLE 120 detik, ' +
+        'kemudian RECORD 60 detik.'
+      );
+    }
+  }
+
+  panel.querySelectorAll('[data-pc-command]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const code = button.dataset.pcCommand;
+
+      if (api && api.getSettings().mode === 'live') {
+        await runLiveCommand(code);
+      } else {
+        chooseMain(code);
+      }
+    });
+  });
+
+  stop.addEventListener('click', async () => {
+    if (api && api.getSettings().mode === 'live') {
+      await runLiveCommand('X');
+      return;
+    }
+
+    showCommand(
+      'x',
+      'PERINGATAN: Tombol website ini TIDAK menghentikan alat. ' +
+      'Perintah x pada firmware menghentikan proses, ' +
+      'mematikan pompa dan menutup katup, ' +
+      'tetapi tekanan sisa tidak otomatis dibuang. ' +
+      'Untuk keadaan darurat gunakan pengaman fisik.'
+    );
+  });
+
+  const descriptions = {
+    'T': 'Membaca tekanan terkalibrasi satu kali.',
+    'S': 'Memantau sensor berkelanjutan lewat Serial Monitor.',
+    'N:1': 'Preset Normal 120/80 mmHg, 75 BPM.',
+    'N:2': 'Preset Hipertensi 150/100 mmHg, 75 BPM.',
+    'N:3': 'Preset Hipotensi 90/60 mmHg, 75 BPM.',
+    'Q:40': 'Uji dorong pompa 40 ms dengan rekaman 100 Hz.',
+    'U': 'Rangkaian otomatis target 65, 105, 145 mmHg dan uji Q.'
+  };
+
+  panel.querySelectorAll('[data-pc-serial]').forEach(button => {
+    button.addEventListener('click', () => {
+      const cmd = button.dataset.pcSerial;
+
+      if (!Object.prototype.hasOwnProperty.call(descriptions, cmd)) {
+        feedback('Perintah tidak dikenali.');
+        return;
+      }
+
+      showCommand(cmd, descriptions[cmd]);
+    });
+  });
+
+  targetInput.addEventListener('input', () => {
+    if (
+      selectedCommand.startsWith('G:') ||
+      selectedCommand.startsWith('L:')
+    ) {
+      const code = selectedCommand[0];
+      selectedCommand = '';
+      commandText.textContent = '—';
+      feedback(
+        'Target berubah. Klik G atau L kembali ' +
+        'untuk memperbarui perintah.'
+      );
     }
   });
-  for (const id of ['modeDemoBtn', 'modeLiveBtn']) {
-    byId(id)?.addEventListener('click', () => {
-      verified = false;
-      current = null;
-      render();
-    });
-  }
-  // Keep controls locked when the operator revokes ARM, sensor drops, or USB disconnects.
-  window.setInterval(() => { if (live()) refresh(false); else { verified = false; current = null; render(); } }, 2500);
-  render();
+
+  byId('pcCopy').addEventListener('click', async () => {
+    if (!selectedCommand) {
+      feedback('Pilih perintah terlebih dahulu.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(selectedCommand);
+      feedback(
+        'Perintah "' + selectedCommand +
+        '" berhasil disalin. ' +
+        'Belum dikirim ke ESP32. ' +
+        'Jangan menjalankan perintah aktuator sebelum ' +
+        'rangkaian dan pengaman fisik divalidasi.'
+      );
+    } catch (_) {
+      feedback(
+        'Clipboard tidak tersedia. ' +
+        'Salin manual teks: ' + selectedCommand
+      );
+    }
+  });
+
+  state.textContent = 'Firmware Serial · Web tidak mengendalikan alat';
+
+  byId('pcCheck').addEventListener('click', async () => {
+    if (!api) {
+      feedback('Adapter API tidak tersedia.');
+      return;
+    }
+
+    state.textContent = 'Memeriksa HTTP API...';
+
+    try {
+      const settings = api.getSettings();
+      const raw = await api.requestJSON(settings.statusPath);
+
+      const data =
+        raw &&
+        raw.data &&
+        typeof raw.data === 'object'
+          ? raw.data
+          : raw;
+
+      if (data.is_simulated === true) {
+        state.textContent = 'SIMULASI · Bukan ESP32';
+        feedback('API simulasi terhubung. Tombol tidak mengirim perintah fisik.');
+        return;
+      }
+      if (data.connected === true) {
+        const allowed =
+          data.is_simulated !== true &&
+          data.remote_commands_enabled === true &&
+          data.safety_ok === true;
+
+        state.textContent = allowed
+          ? 'ESP32 terhubung · Izin kontrol tersedia'
+          : 'ESP32 terhubung · Kontrol terkunci';
+
+        feedback(
+          allowed
+            ? 'API terhubung dan izin firmware tersedia. ' +
+              'Setiap perintah tetap harus lolos ' +
+              'pemeriksaan sensor serta konfirmasi operator.'
+            : 'Monitoring ESP32 terhubung. ' +
+              'Kontrol belum diizinkan firmware. ' +
+              'remote_commands_enabled=' +
+              String(data.remote_commands_enabled) +
+              ', safety_ok=' +
+              String(data.safety_ok)
+        );
+      } else {
+        state.textContent = 'API merespons · ESP32 belum terverifikasi';
+
+        feedback(
+          'Endpoint HTTP merespons tetapi tidak ' +
+          'mengonfirmasi ESP32 terhubung.'
+        );
+      }
+    } catch (error) {
+      state.textContent = 'HTTP API tidak tersedia';
+
+      feedback(
+        'Tidak dapat menjangkau HTTP API: ' +
+        error.message +
+        '. Firmware terbaru yang dikirim tidak ' +
+        'menyediakan endpoint Wi-Fi. ' +
+        'Gunakan Serial Monitor untuk komunikasi langsung.'
+      );
+    }
+  });
 })();

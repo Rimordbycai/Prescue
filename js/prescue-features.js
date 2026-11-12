@@ -7,8 +7,8 @@
 
   const presets = {
     normal: [120,80,75,'Normal'],
-    high: [150,100,80,'Hipertensi'],
-    low: [90,60,70,'Hipotensi']
+    high: [150,100,75,'Hipertensi'],
+    low: [90,60,75,'Hipotensi']
   };
 
   let selected = 'normal';
@@ -40,7 +40,7 @@
     }
     const name=presets[selected]?.[3]||'Kustom';
     el('pfPresetResult').textContent=
-      name+' · '+sbp+'/'+dbp+' mmHg · '+bpm+' bpm · Belum dikirim ke alat';
+      name+' · '+sbp+'/'+dbp+' mmHg · '+bpm+' bpm · '+(selected==='custom'?'Mode kustom belum didukung firmware N':'Pratinjau, belum dikirim ke alat');
     el('pfOledMode').textContent='MODE DENYUT · '+name.toUpperCase();
     el('pfOledMain').textContent=sbp+' / '+dbp;
     el('pfOledSub').textContent='NADI '+bpm+' BPM';
