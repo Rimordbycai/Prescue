@@ -280,9 +280,8 @@ def serial_worker(port):
                             s.last_error = "Waktu pengujian melewati 240 detik; periksa alat secara fisik"
                             s.arm_until = 0
                             s.cmd_pending_at = None
-                    if poll_q:
-                        serial_write("Q")
-                    elif poll_t:
+                    # V2: Q mengaktifkan uji pompa; jangan polling otomatis.
+                    if poll_t:
                         serial_write("T")
                 except (serial.SerialException, OSError, RuntimeError) as e:
                     with s.lock:

@@ -22,7 +22,7 @@ void rangkaianUjiOtomatis(int duty);
 
 #define AMBANG_MENTAH     2800.0f  // batas nilai mentah saat memompa dengan P
 #define BATAS_GOYANG      25.0f    // simpangan baku maksimum, satuan hitungan ADC
-#define BATAS_KERAS       300.0f   // mmHg, di atas ini pompa mati otomatis
+#define BATAS_KERAS       180.0f   // mmHg, di atas ini pompa mati otomatis
 
 #define PULSA_PER_PUTARAN 1
 #define R_SHUNT           0.10f
@@ -49,6 +49,58 @@ uint8_t dutyIsi = 70;
 
 volatile uint32_t cacahPulsa = 0;
 bool dibatalkan = false;
+
+// PRESCUE_USB_V2: hardware serial protocol for operator-gated local bridge.
+// Normal Serial Monitor commands keep working. Prefix '!' requires a fresh
+// USB heartbeat '~' and valid sensors. Wi-Fi POST remains DRY-RUN ONLY.
+void motorMati();
+void katupBuka();
+void katupTutup();
+void bacaStat(float &rata, float &simpangan);
+float keMmHg(float raw);
+float mmHgMudah();
+static uint32_t prescueUsbHeartbeatMs = 0;
+static bool prescueUsbRemoteRunning = false;
+static constexpr uint32_t PRESCUE_USB_WATCHDOG_MS = 2500UL;
+
+struct PrescueUsbRemoteGuard {
+  explicit PrescueUsbRemoteGuard(bool remote){ prescueUsbRemoteRunning = remote; }
+  ~PrescueUsbRemoteGuard(){ prescueUsbRemoteRunning = false; }
+};
+
+bool prescueUsbSensorCheck(float &pressure, float &raw, float &sd, float &independent){
+  bacaStat(raw, sd);
+  pressure = keMmHg(raw);
+  independent = mmHgMudah();
+  return isfinite(raw) && isfinite(sd) && isfinite(pressure) && isfinite(independent) &&
+         raw >= 80.0f && raw <= 4050.0f && sd >= 0 && sd < BATAS_GOYANG &&
+         pressure >= -10.0f && pressure <= 165.0f &&
+         independent >= -10.0f && independent <= 165.0f &&
+         fabsf(pressure - independent) <= 15.0f;
+}
+
+void prescueUsbProbe(){
+  float p, raw, sd, independent;
+  bool ok = prescueUsbSensorCheck(p, raw, sd, independent);
+  Serial.printf("# PRESCUE_USB_V2 sensor_ok=%d pressure_mmHg=%.3f raw_adc=%.1f sd=%.1f independent_mmHg=%.3f hard_limit=180 target_limit=150\n",
+                ok ? 1 : 0, p, raw, sd, independent);
+}
+
+void prescueUsbFailSafe(){
+  motorMati();
+  Serial.println("# REMOTE_LINK_LOST: pump OFF, vent requested; independent relief required");
+  katupBuka();
+  uint32_t start = millis();
+  while ((uint32_t)(millis()-start) < 15000UL){
+    float p = mmHgMudah();
+    if (isfinite(p) && p <= 20.0f) break;
+    delay(10);
+  }
+  katupTutup();
+  dibatalkan = true;
+  prescueUsbRemoteRunning = false;
+}
+
 uint32_t katupManualBolehDibuka = 0;
 
 /* ---- variabel kalibrasi MPX ---- */
@@ -414,6 +466,14 @@ void tekananMudah() {
 // Pengaman: matikan pompa dan buang tekanan lewat katup bila melewati batas
 bool lewatBatas() {
   float p = mmHgMudah();
+
+  if (!isfinite(p) || p < -10.0f) {
+    motorMati();
+    dibatalkan = true;
+    Serial.println("# SENSOR FAULT: pompa dihentikan.");
+    return true;
+  }
+
   if (p > BATAS_KERAS) {
     motorMati();
     Serial.printf("# HENTI DARURAT M=%.1f. Buang sampai M<20, maksimum 15 detik; x tidak memotong pelepasan.\n", p);
@@ -437,7 +497,11 @@ bool cekBatal() {
   if (dibatalkan) return true;
   bool batal = false;
   while (Serial.available()) {
-    if (tolower(Serial.read()) == 'x') batal = true;
+    int value = Serial.read();
+    if (value < 0) break;
+    char c = (char)value;
+    if (c == '~') prescueUsbHeartbeatMs = millis();
+    if (tolower((unsigned char)c) == 'x') batal = true;
   }
   if (batal) {
     semuaMati();
@@ -445,9 +509,13 @@ bool cekBatal() {
     Serial.println("# DIHENTIKAN");
     return true;
   }
+  if (prescueUsbRemoteRunning &&
+      (uint32_t)(millis()-prescueUsbHeartbeatMs) > PRESCUE_USB_WATCHDOG_MS) {
+    prescueUsbFailSafe();
+    return true;
+  }
   return false;
 }
-
 bool tungguAman(uint32_t lama) {
   uint32_t mulai = millis();
   while (millis() - mulai < lama) {
@@ -1065,8 +1133,8 @@ float bacaJeda(uint16_t jedaMs = 80) {
 
 bool isiSampai(float target, int duty) {
   semuaMati();
-  if (!isfinite(target) || target < 20 || target > 280 || duty < 1 || duty > 100) {
-    Serial.println("# target 20..280, duty 1..100"); return false;
+  if (!isfinite(target) || target < 20 || target > 150 || duty < 1 || duty > 100) {
+    Serial.println("# target 20..150, duty 1..100"); return false;
   }
   dutyIsi = duty;
   uint32_t t0 = millis(), cek = t0, log = t0;
@@ -1256,6 +1324,7 @@ void bantuan() {
   Serial.println("# R        nilai mentah dan kestabilan");
   Serial.println("# T        tekanan dengan kalibrasi KAL_A dan KAL_B");
   Serial.println("# M        tekanan dengan kalibrasi pabrik ESP32");
+  Serial.println("# Z        diagnostik aman USB V2, tanpa menggerakkan aktuator");
   Serial.println("# S        mode pantau berkelanjutan");
   Serial.println("# W:60     rekam cepat 100 Hz selama 60 detik");
   Serial.println("# N:1/2/3  denyut 120/80, 150/100, 90/60; HR 75, puncak pada MAP, rekam 100 Hz");
@@ -1265,7 +1334,7 @@ void bantuan() {
   Serial.println("# U        tiap target: tunggu 60s, lalu Q:20, Q:40, Q:60, Q:80 tiap 5s");
   Serial.println("# G:150,60 isi otomatis sampai 150 mmHg dengan duty 60, lalu pompa mati");
   Serial.println("# G:150    sama, memakai duty terakhir; T terkalibrasi, maksimum 90s, log 2s");
-  Serial.println("# G: harus >20 dalam 30s, kemudian naik >=2 setiap 5s. M>300 selalu prioritas darurat.");
+  Serial.println("# G: harus >20 dalam 30s, kemudian naik >=2 setiap 5s. M>180 selalu prioritas darurat.");
   Serial.println("# Darurat: pompa OFF, katup buka sampai M<20 atau 15s; x tidak memotong pelepasan.");
   Serial.println("# x membatalkan semua tahap normal: pompa OFF, katup tutup. Tekanan sisa harus dibuang aman.");
   Serial.println("# ---- KALIBRASI TAHAP 0 ----");
@@ -1306,8 +1375,33 @@ void loop() {
   if (!Serial.available()) { prescueIdleSample(); delay(10); return; }
   String b = Serial.readStringUntil('\n'); b.trim();
   if (b.length() == 0) return;
+  if (b == "~") { prescueUsbHeartbeatMs = millis(); return; }
+
+  bool usbRemote = b.startsWith("!");
+  if (usbRemote) {
+    b.remove(0, 1);
+    b.trim();
+    if (!(b.startsWith("G:") || b.startsWith("L:") || b == "O") ||
+        prescueUsbHeartbeatMs == 0 ||
+        (uint32_t)(millis()-prescueUsbHeartbeatMs) > 1500UL) {
+      Serial.println("# REMOTE_REJECT: command or heartbeat invalid");
+      return;
+    }
+    float pressure, raw, sd, independent;
+    if (!prescueUsbSensorCheck(pressure, raw, sd, independent)) {
+      Serial.println("# REMOTE_REJECT: sensor / calibration invalid");
+      return;
+    }
+    if ((b.startsWith("G:") || b.startsWith("L:")) && pressure > 20.0f) {
+      Serial.println("# REMOTE_REJECT: pressure must be <=20 mmHg");
+      return;
+    }
+  }
+
   char c = toupper(b.charAt(0));
   PrescueSerialBusyGuard prescueBusyGuard(c);
+  PrescueUsbRemoteGuard prescueUsbGuard(usbRemote);
+  if (usbRemote) Serial.printf("# REMOTE_ACCEPT %c\n", c);
   dibatalkan = false;
   int p = b.indexOf(':');
   float arg = (p > 0) ? b.substring(p + 1).toFloat() : 0;
@@ -1332,8 +1426,8 @@ void loop() {
     } else if (n >= 2) {
       valid = valid && dutyValid(a[1]); if (valid) duty = (int)a[1];
     }
-    valid = valid && a[0] >= 20 && a[0] <= 280;
-    if (!valid) { Serial.println("# Argumen tidak valid. Lihat ?; angka lengkap, target 20..280, duty bulat 1..100."); return; }
+    valid = valid && a[0] >= 20 && a[0] <= 150;
+    if (!valid) { Serial.println("# Argumen tidak valid. Lihat ?; angka lengkap, target 20..150, duty bulat 1..100."); return; }
     if (c == 'G') isiSampai(a[0], duty);
     else if (c == 'L') ujiTahan(a[0], duty);
     else if (c == 'E') ujiPertahankan(a[0], durasi, duty);
@@ -1342,6 +1436,7 @@ void loop() {
   else if (c == 'O') bukaKatupManual(p > 0 ? (int)arg : 0);
   else if (c == 'R') bacaSekali();
   else if (c == 'T') bacaTekanan();
+  else if (c == 'Z') prescueUsbProbe();
   else if (c == 'M') tekananMudah();
   else if (c == 'S') pantau();
   else if (c == 'W') rekamCepat(p > 0 ? arg : 60);
