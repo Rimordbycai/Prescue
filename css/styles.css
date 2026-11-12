@@ -313,3 +313,88 @@
   background:#ffe8ea;color:#a8243a;
 }
 .pc-controls .pc-actions .pc-stop:disabled{opacity:.45;}
+
+
+/* PRESCUE FINAL SCHEMATIC FEATURES */
+.pf-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+  margin-bottom:20px;
+}
+.pf-panel{padding:22px;min-width:0}
+.pf-heading{
+  display:flex;justify-content:space-between;
+  align-items:center;gap:12px;margin-bottom:10px;
+}
+.pf-heading h3,.pf-oled h3{margin:0;font-size:16px}
+.pf-chip{
+  font-size:10px;font-weight:700;
+  padding:6px 10px;border-radius:20px;
+  background:#e8f0ff;color:#3766a3;
+}
+.pf-note{font-size:12px;line-height:1.7;color:#718096}
+.pf-presets{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:9px;margin:18px 0;
+}
+.pf-presets button{
+  background:#f5f8fd;border:1px solid #dce6f2;
+  color:#30445f;border-radius:11px;padding:12px;
+  cursor:pointer;font-weight:650;
+}
+.pf-presets button:hover,
+.pf-presets button.pf-selected{
+  background:#e9f1ff;border-color:#638de3;color:#245ac0;
+}
+.pf-fields{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.pf-fields label,.pf-static-label{
+  display:flex;flex-direction:column;gap:8px;
+  font-size:11px;font-weight:700;color:#51627b;
+}
+.pf-fields input,.pf-static-label input{
+  box-sizing:border-box;width:100%;
+  border:1px solid #dae4f2;border-radius:10px;
+  padding:11px;background:#fff;color:#21344f;
+  font-size:14px;
+}
+.pf-static-label{margin-top:20px}
+.pf-action{margin-top:17px;cursor:pointer}
+.pf-feedback{
+  margin-top:14px;font-size:12px;color:#456a9c;
+  line-height:1.6;
+}
+.pf-separator{border-top:1px solid #e8eef6;padding-top:14px}
+.pf-reading{
+  display:flex;align-items:center;
+  justify-content:space-between;gap:15px;
+  padding:14px 0;border-bottom:1px solid #edf1f7;
+  font-size:12px;
+}
+.pf-reading strong{color:#35598e;text-align:right}
+.pf-oled{
+  padding:24px;display:flex;gap:30px;
+  align-items:center;justify-content:space-between;
+  flex-wrap:wrap;
+}
+.pf-screen{
+  width:270px;max-width:100%;box-sizing:border-box;
+  padding:18px;border:7px solid #263952;
+  border-radius:15px;background:#071c2d;
+  color:#b9f5ff;font-family:monospace;
+  display:flex;flex-direction:column;gap:12px;
+}
+.pf-screen-top{
+  display:flex;justify-content:space-between;
+  gap:10px;font-size:10px;
+}
+.pf-screen strong{font-size:28px;letter-spacing:1px}
+.pf-screen small{font-size:9px;line-height:1.5}
+@media(max-width:780px){
+  .pf-grid{grid-template-columns:1fr}
+  .pf-oled{align-items:stretch}
+  .pf-screen{width:100%}
+}

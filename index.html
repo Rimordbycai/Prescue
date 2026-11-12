@@ -43,6 +43,7 @@
         <a href="#overview" class="nav-link active" data-nav="overview"><svg class="ico"><use href="#i-home"/></svg>Ringkasan</a>
         <a href="#monitoring" class="nav-link" data-nav="monitoring"><svg class="ico"><use href="#i-chart"/></svg>Live Monitoring</a>
         <a href="#testing" class="nav-link" data-nav="testing"><svg class="ico"><use href="#i-flask"/></svg>Pengujian</a>
+        <a href="#features" class="nav-link" data-nav="features">Mode &amp; Daya</a>
         <a href="#history" class="nav-link" data-nav="history"><svg class="ico"><use href="#i-history"/></svg>Hasil & Riwayat</a>
         <a href="#integration" class="nav-link" data-nav="integration"><svg class="ico"><use href="#i-settings"/></svg>Integrasi API</a>
       </nav>
@@ -143,7 +144,153 @@
         </section>
 
 
-        <section class="section" id="history">
+
+<!-- PRESCUE FINAL SCHEMATIC FEATURES -->
+<section class="section" id="features">
+  <div class="section-heading">
+    <div>
+      <div class="eyebrow">RANCANGAN SKEMATIK FINAL</div>
+      <h2>Mode Operasi & Daya</h2>
+      <p>Konfigurasi simulator dan pemantauan berdasarkan rancangan 12 November 2026.</p>
+    </div>
+  </div>
+
+  <div class="pf-grid">
+    <article class="panel pf-panel">
+      <div class="pf-heading">
+        <h3>Mode Denyut</h3>
+        <span class="pf-chip">Pratinjau</span>
+      </div>
+      <p class="pf-note">Pilih preset untuk melihat parameter. Belum menjalankan aktuator.</p>
+
+      <div class="pf-presets">
+        <button type="button" data-pf-preset="normal">Normal</button>
+        <button type="button" data-pf-preset="high">Hipertensi</button>
+        <button type="button" data-pf-preset="low">Hipotensi</button>
+        <button type="button" data-pf-preset="custom">Kustom</button>
+      </div>
+
+      <div class="pf-fields">
+        <label>SBP (mmHg)
+          <input id="pfSbp" type="number" min="50" max="200" value="120">
+        </label>
+        <label>DBP (mmHg)
+          <input id="pfDbp" type="number" min="30" max="150" value="80">
+        </label>
+        <label>Nadi (bpm)
+          <input id="pfBpm" type="number" min="30" max="180" value="75">
+        </label>
+      </div>
+
+      <button type="button" class="button primary pf-action" id="pfApply">
+        Tampilkan Konfigurasi
+      </button>
+      <p id="pfPresetResult" class="pf-feedback" aria-live="polite">
+        Normal · 120/80 mmHg · 75 bpm
+      </p>
+    </article>
+
+    <article class="panel pf-panel">
+      <div class="pf-heading">
+        <h3>Tekanan Statis</h3>
+        <span class="pf-chip">Pratinjau</span>
+      </div>
+
+      <p class="pf-note">Mode tekanan konstan untuk rancangan pengujian dan kalibrasi.</p>
+
+      <label class="pf-static-label">
+        Target Tekanan (mmHg)
+        <input id="pfStaticTarget" type="number" min="20" max="150" value="150">
+      </label>
+
+      <button type="button" class="button secondary pf-action" id="pfStaticApply">
+        Tampilkan Target
+      </button>
+
+      <p class="pf-feedback" id="pfStaticResult" aria-live="polite">
+        Target awal: 150 mmHg
+      </p>
+
+      <div class="pf-note pf-separator">
+        Pengaturan ini tidak mengirim perintah ke ESP32.
+      </div>
+    </article>
+
+    <article class="panel pf-panel">
+      <div class="pf-heading">
+        <h3>Monitoring Baterai</h3>
+        <span class="pf-chip">API</span>
+      </div>
+
+      <div class="pf-reading">
+        <span>Tegangan baterai</span>
+        <strong id="pfBattery">Belum tersedia</strong>
+      </div>
+
+      <div class="pf-reading">
+        <span>Tegangan Vs sensor</span>
+        <strong id="pfSensorSupply">Belum tersedia</strong>
+      </div>
+
+      <div class="pf-reading">
+        <span>Status baterai</span>
+        <strong id="pfBatteryState">Belum tersedia</strong>
+      </div>
+
+      <p class="pf-note">
+        Rencana peringatan: 10,8 V.
+        Rencana penguncian aktuator: 9,9 V.
+        Proteksi wajib diterapkan di hardware/firmware.
+      </p>
+    </article>
+
+    <article class="panel pf-panel">
+      <div class="pf-heading">
+        <h3>Diagnostik & Pengaman</h3>
+        <span class="pf-chip">API</span>
+      </div>
+
+      <div class="pf-reading">
+        <span>Sensor tekanan</span>
+        <strong id="pfSensorState">Belum tersedia</strong>
+      </div>
+
+      <div class="pf-reading">
+        <span>Pengaman firmware</span>
+        <strong id="pfSafetyState">Belum tersedia</strong>
+      </div>
+
+      <div class="pf-reading">
+        <span>Kalibrasi K</span>
+        <strong id="pfCalibration">Belum tersedia</strong>
+      </div>
+
+      <p class="pf-note">
+        Tombol STOP fisik dan prosedur pelepasan tekanan
+        merupakan bagian rancangan hardware, bukan kontrol web.
+      </p>
+    </article>
+  </div>
+
+  <div class="panel pf-oled">
+    <div>
+      <h3>Pratinjau Panel OLED</h3>
+      <p class="pf-note">Representasi antarmuka yang direncanakan, bukan layar ESP32 nyata.</p>
+    </div>
+    <div class="pf-screen">
+      <div class="pf-screen-top">
+        <span>PRESCUE · NIBP SIM</span>
+        <span id="pfOledBattery">--.- V</span>
+      </div>
+      <div id="pfOledMode">MODE DENYUT</div>
+      <strong id="pfOledMain">120 / 80</strong>
+      <span id="pfOledSub">NADI 75 BPM</span>
+      <small id="pfOledStatus">PRATINJAU · TIDAK MENGAKTIFKAN POMPA</small>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="history">
           <div class="section-heading"><div><div class="eyebrow">DATA & EVALUASI</div><h2>Hasil dan riwayat pengujian</h2><p>Daftar hasil uji yang tersedia; tidak dibuatkan hasil pengujian fiktif.</p></div><button class="button secondary sm" id="exportCsvBtn"><svg class="ico"><use href="#i-download"/></svg> Ekspor CSV</button></div>
           <div class="history-layout"><div class="panel history-panel"><div class="panel-heading"><div><h3>Riwayat uji</h3><p>Awalnya berisi satu rekaman yang diberikan kelompok.</p></div><span class="tiny-pill" id="historyCount">1 rekaman</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Pengujian</th><th>Target</th><th>Fase</th><th>Durasi RECORD</th><th>Hasil</th></tr></thead><tbody id="historyTbody"></tbody></table></div></div>
           <div class="panel log-panel"><div class="panel-heading"><div><h3>Cuplikan data sensor</h3><p>Sampel terpilih dari log, bukan keseluruhan 300 titik.</p></div><span class="tiny-pill" id="logPointCount">— titik</span></div><div class="table-scroll log-scroll"><table class="data-table"><thead><tr><th>Fase</th><th>Waktu (s)</th><th>Tekanan (mmHg)</th></tr></thead><tbody id="samplesTbody"></tbody></table></div></div></div>
@@ -178,5 +325,6 @@
   <script src="js/chart.js"></script>
   <script src="js/app.js"></script>
   <script src="js/controls.js"></script>
+  <script src="js/prescue-features.js"></script>
 </body>
 </html>
