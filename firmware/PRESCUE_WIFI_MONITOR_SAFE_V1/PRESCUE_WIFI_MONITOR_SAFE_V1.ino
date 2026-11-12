@@ -5,6 +5,12 @@
 #include <WebServer.h>
 #include "wifi_settings.h"
 
+// PRESCUE UART DSP V1
+#define DSP_UART_RX 16
+#define DSP_UART_TX 17
+#define DSP_UART_BAUD 115200
+
+
 bool isiSampai(float target, int duty);
 
 #define PAKAI_TACHO       0        // 1 bila sensor optik terpasang
@@ -524,6 +530,60 @@ void wifiSampleIdle() {
                && p >= -10 && p <= 170 && backup >= -10 && backup <= 170
                && fabsf(p - backup) <= 25;
   wifiCaptureIdle(p, raw, valid);
+}
+
+
+// PRESCUE UART DSP V1
+// Telemetri pasif saat sistem idle.
+// Tidak mengendalikan pompa atau solenoid.
+void dspUartKirim() {
+  static uint32_t terakhir = 0;
+
+  if (millis() - terakhir < 1000UL) return;
+  terakhir = millis();
+
+  float raw, sd;
+  bacaStat(raw, sd);
+
+  float tekanan = keMmHg(raw);
+  float pembanding = mmHgMudah();
+
+  bool valid =
+      isfinite(raw) &&
+      isfinite(sd) &&
+      isfinite(tekanan) &&
+      isfinite(pembanding) &&
+      raw >= 80.0f &&
+      raw <= 4050.0f &&
+      sd <= BATAS_GOYANG &&
+      tekanan >= -10.0f &&
+      tekanan <= 170.0f &&
+      pembanding >= -10.0f &&
+      pembanding <= 170.0f &&
+      fabsf(tekanan - pembanding) <= 25.0f;
+
+  char data[80];
+
+  if (valid) {
+    snprintf(
+        data,
+        sizeof(data),
+        "PRESCUE_PRESSURE,%.2f,1",
+        tekanan
+    );
+  } else {
+    snprintf(
+        data,
+        sizeof(data),
+        "PRESCUE_PRESSURE,NA,0"
+    );
+  }
+
+  Serial2.println(data);
+
+  // Salinan ke USB Serial untuk debugging.
+  Serial.print("# UART2 TX ");
+  Serial.println(data);
 }
 
 void pompaSebentar(uint16_t lamaMs) {
@@ -1100,6 +1160,16 @@ void setup() {
 #endif
   analogReadResolution(12);
   analogSetAttenuation(ADC_11db);
+
+  Serial2.begin(
+      DSP_UART_BAUD,
+      SERIAL_8N1,
+      DSP_UART_RX,
+      DSP_UART_TX
+  );
+
+  Serial.println("# UART2 DSP siap.");
+
   wifiStart();
   Serial.println("\n# UJI POMPA, KATUP, DAN SENSOR MPX DENGAN L298N - Kelompok 18");
   Serial.printf("# pin pompa=%d  pin katup=%d  pin sensor=%d\n", PIN_MOTOR, PIN_KATUP, PIN_SENSOR);
@@ -1108,7 +1178,12 @@ void setup() {
 }
 
 void loop() {
-  if (!Serial.available()) { wifiSampleIdle(); delay(10); return; }
+  if (!Serial.available()) {
+    wifiSampleIdle();
+    dspUartKirim();
+    delay(10);
+    return;
+  }
   String b = Serial.readStringUntil('\n'); b.trim();
   if (b.length() == 0) return;
   char c = toupper(b.charAt(0));
