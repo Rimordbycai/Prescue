@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """PRESCUE local fake ESP32 API for browser UI testing; NO physical actuation."""
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-import json, time, math
+import json, time, math, re
 from urllib.parse import urlparse
 
 START = time.monotonic()
@@ -29,7 +29,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/status':
             self.send_json(200, {
                 'connected': True, 'connection_type': 'local_mock',
-                'is_simulated': True, 'api_mode': 'mock_read_only',
+                'is_simulated': True, 'api_mode': 'mock_dry_run',
                 'pressure_mmHg': pressure, 'target_mmHg': None,
                 'phase': 'SIMULASI', 'test_mode': None,
                 'pump_on': False, 'valve_open': False,
@@ -37,7 +37,7 @@ class Handler(BaseHTTPRequestHandler):
                 'busy': False, 'sample_count': int(elapsed / 2) + 1,
                 'elapsed_seconds': elapsed,
                 'leak_rate_mmHg_min': None, 'test_result': None,
-                'remote_commands_enabled': False, 'safety_ok': False,
+                'remote_commands_enabled': False, 'dry_run_commands_enabled': True, 'safety_ok': False,
                 'can_pressurize': False,
                 'note': 'SIMULASI LOKAL. Tidak terhubung ke ESP32.'
             })
@@ -55,13 +55,46 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.send_json(404, {'error': 'Mock endpoint tidak ditemukan'})
 
+
+    # PRESCUE COMMAND DRY RUN V3
     def do_POST(self):
-        # Consume request safely without parsing or executing serial commands.
-        if urlparse(self.path).path == '/api/command':
-            self.send_json(423, {'accepted': False,
-                                 'error': 'SIMULASI: perintah tidak diteruskan ke hardware'})
-        else:
+        if urlparse(self.path).path != '/api/command':
             self.send_json(404, {'accepted': False, 'error': 'Not found'})
+            return
+
+        try:
+            size = int(self.headers.get('Content-Length', '0'))
+            if size < 1 or size > 100:
+                raise ValueError('Invalid payload size')
+
+            data = json.loads(self.rfile.read(size))
+            command = data.get('command')
+
+            valid = isinstance(command, str) and (
+                command in ('O', 'X') or (
+                    re.fullmatch(r'[GL]:[0-9]{2,3}', command) is not None
+                    and 20 <= int(command[2:]) <= 150
+                )
+            )
+
+            if not valid:
+                raise ValueError('Unsupported command')
+
+            print('DRY-RUN:', command, flush=True)
+
+            self.send_json(200, {
+                'accepted': True,
+                'executed': False,
+                'dry_run': True,
+                'command': command,
+                'message': 'No hardware actuation'
+            })
+
+        except (ValueError, TypeError, json.JSONDecodeError) as exc:
+            self.send_json(400, {
+                'accepted': False,
+                'error': str(exc)
+            })
 
 if __name__ == '__main__':
     server = ThreadingHTTPServer(('127.0.0.1', 8765), Handler)

@@ -95,6 +95,36 @@
           ? raw.data
           : raw;
 
+
+      // PRESCUE COMMAND DRY RUN V3
+      if (
+        d.connected === true &&
+        d.dry_run_commands_enabled === true &&
+        d.remote_commands_enabled === false &&
+        ['monitor_dry_run', 'mock_dry_run'].includes(d.api_mode)
+      ) {
+        const response = await api.sendCommand(command);
+
+        if (
+          response?.accepted !== true ||
+          response?.dry_run !== true ||
+          response?.executed !== false
+        ) {
+          throw new Error('Respons dry-run tidak valid.');
+        }
+
+        state.textContent = d.is_simulated
+          ? 'SIMULASI · Dry-run berhasil'
+          : 'ESP32 terhubung · Dry-run berhasil';
+
+        feedback(
+          'DRY-RUN BERHASIL: ' + command +
+          ' diterima dan divalidasi oleh API. ' +
+          'Pompa dan katup TIDAK dijalankan.'
+        );
+        return;
+      }
+
       if (d.connected !== true || d.is_simulated === true) {
         throw new Error(
           'ESP32 tidak terverifikasi sebagai perangkat fisik.'
@@ -329,11 +359,22 @@
           : raw;
 
       if (data.is_simulated === true) {
+        if (data.dry_run_commands_enabled === true) {
+          state.textContent = 'SIMULASI · Dry-run tersedia';
+          feedback('Perintah dapat diuji tanpa menggerakkan hardware.');
+          return;
+        }
         state.textContent = 'SIMULASI · Bukan ESP32';
         feedback('API simulasi terhubung. Tombol tidak mengirim perintah fisik.');
         return;
       }
       if (data.connected === true) {
+        if (data.dry_run_commands_enabled === true &&
+            data.remote_commands_enabled === false) {
+          state.textContent = 'ESP32 terhubung · Dry-run tersedia';
+          feedback('API dapat menguji G/L/O/X. Aktuator fisik tetap terkunci.');
+          return;
+        }
         const allowed =
           data.is_simulated !== true &&
           data.remote_commands_enabled === true &&

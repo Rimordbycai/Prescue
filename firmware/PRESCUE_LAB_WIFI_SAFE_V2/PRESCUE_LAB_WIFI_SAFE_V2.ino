@@ -170,7 +170,8 @@ void prescueHttpStatus(){
   s+=",\"elapsed_seconds\":";s+=String(millis()/1000.0f,2);
   s+=",\"leak_rate_mmHg_min\":null,\"test_result\":null";
   s+=",\"remote_commands_enabled\":false,\"safety_ok\":false,\"can_pressurize\":false";
-  s+=",\"is_simulated\":false,\"api_mode\":\"monitor_only\"";
+  s+=",\"dry_run_commands_enabled\":true";
+  s+=",\"is_simulated\":false,\"api_mode\":\"monitor_dry_run\"";
   s+=",\"note\":\"Latest serial firmware with read-only WiFi. No remote actuation.\"}";
   prescueHttpHeaders();
   prescueServer.send(200,"application/json",s);
@@ -199,16 +200,79 @@ void prescueHttpSamples(){
   prescueServer.send(200,"application/json",s);
 }
 
+
+// PRESCUE COMMAND DRY RUN V3
+// No pump, valve, or Serial command is executed over Wi-Fi.
 void prescueHttpCapabilities(){
   prescueHttpHeaders();
-  prescueServer.send(200,"application/json",
-    "{\"wifi_monitoring\":true,\"remote_commands_enabled\":false,\"serial_commands_available\":true,\"reason\":\"Hardware validation required before remote actuation\"}");
+  prescueServer.send(200, "application/json",
+    "{\"wifi_monitoring\":true,"
+    "\"dry_run_commands_enabled\":true,"
+    "\"remote_commands_enabled\":false,"
+    "\"serial_commands_available\":true,"
+    "\"reason\":\"DRY RUN only; physical actuation locked\"}");
 }
 
-void prescueHttpCommandLocked(){
+void prescueHttpCommandDryRun(){
+  String body = prescueServer.arg("plain");
+  body.trim();
+
+  if(body.length() > 80){
+    prescueHttpHeaders();
+    prescueServer.send(400, "application/json",
+      "{\"accepted\":false,\"error\":\"Payload too large\"}");
+    return;
+  }
+
+  String compact;
+  compact.reserve(body.length());
+
+  for(size_t i=0; i<body.length(); i++){
+    char c=body.charAt(i);
+    if(c!=' ' && c!='\n' && c!='\r' && c!='\t')
+      compact += c;
+  }
+
+  const String prefix="{\"command\":\"";
+
+  if(!compact.startsWith(prefix) || !compact.endsWith("\"}")){
+    prescueHttpHeaders();
+    prescueServer.send(400, "application/json",
+      "{\"accepted\":false,\"error\":\"Invalid JSON command format\"}");
+    return;
+  }
+
+  String cmd=compact.substring(prefix.length(),compact.length()-2);
+  bool valid=(cmd=="O" || cmd=="X");
+
+  if(!valid && cmd.length()>=4 &&
+     (cmd[0]=='G' || cmd[0]=='L') && cmd[1]==':'){
+    String number=cmd.substring(2);
+    bool digits=number.length()>=2 && number.length()<=3;
+
+    for(size_t i=0;i<number.length();i++){
+      if(number[i]<'0' || number[i]>'9') digits=false;
+    }
+
+    int target=number.toInt();
+    valid=digits && target>=20 && target<=150;
+  }
+
+  if(!valid){
+    prescueHttpHeaders();
+    prescueServer.send(422, "application/json",
+      "{\"accepted\":false,\"error\":\"Unsupported command\"}");
+    return;
+  }
+
+  // Acknowledgement only. NO physical execution.
+  String response=
+    "{\"accepted\":true,\"executed\":false,"
+    "\"dry_run\":true,\"command\":\"" + cmd +
+    "\",\"message\":\"Command validated; actuators NOT activated\"}";
+
   prescueHttpHeaders();
-  prescueServer.send(423,"application/json",
-    "{\"accepted\":false,\"error\":\"ESP32 monitoring only. Physical remote control locked.\"}");
+  prescueServer.send(200, "application/json", response);
 }
 
 void prescueWifiTask(void*){
@@ -232,7 +296,7 @@ void prescueWifiStart(){
   prescueServer.on("/api/status",HTTP_GET,prescueHttpStatus);
   prescueServer.on("/api/samples",HTTP_GET,prescueHttpSamples);
   prescueServer.on("/api/capabilities",HTTP_GET,prescueHttpCapabilities);
-  prescueServer.on("/api/command",HTTP_POST,prescueHttpCommandLocked);
+  prescueServer.on("/api/command",HTTP_POST,prescueHttpCommandDryRun);
   prescueServer.on("/api/command",HTTP_OPTIONS,[]{prescueHttpHeaders();prescueServer.send(204,"text/plain","");});
   prescueServer.onNotFound([](){prescueHttpHeaders();prescueServer.send(404,"application/json","{\"error\":\"Not found\"}");});
   prescueWifiStarted=xTaskCreatePinnedToCore(
