@@ -13,7 +13,7 @@
   stopButton.className = 'button secondary pc-stop';
   stopButton.textContent = 'X · Hentikan proses';
   stopButton.title = 'Mengirim x untuk membatalkan proses. Ini TIDAK membuang tekanan.';
-  stopButton.disabled = true;
+  stopButton.disabled = false;
   if (actions) actions.appendChild(stopButton);
 
   const targetInput = byId('pcTarget');
@@ -28,22 +28,40 @@
   function feedback(text) { byId('pcFeedback').textContent = text; }
   function render() {
     const active = live() && verified && !checking && !sending &&
-                   current?.connected && current?.remote_commands_enabled === true &&
-                   current?.sensor_ok === true && current?.safety_ok === true &&
-                   current?.busy !== true && current?.is_simulated !== true;
+      current?.connected &&
+      current?.remote_commands_enabled === true &&
+      current?.sensor_ok === true &&
+      current?.safety_ok === true &&
+      current?.busy !== true &&
+      current?.is_simulated !== true;
+
     for (const button of buttons) {
       const cmd = button.dataset.pcCommand;
-      button.disabled = !active || ((cmd === 'G' || cmd === 'L') && current?.can_pressurize !== true);
+      const permitted = active &&
+        (cmd === 'O' || current?.can_pressurize === true);
+
+      button.disabled = false;
+      button.title = permitted
+        ? 'Perintah tersedia setelah konfirmasi operator'
+        : 'Klik untuk mengetahui status kesiapan perangkat';
     }
-    stopButton.disabled = !live() || !current?.connected || !current?.busy || sending;
-    const stateText = !live() ? 'Rekaman · kontrol nonaktif' :
-      !current?.connected ? 'ESP32 belum terhubung' :
-      current?.busy ? 'Pengujian berjalan' :
-      active ? 'Siap menerima perintah' :
-      current?.operator_armed ? 'Menunggu sensor / firmware' :
-      'Terkunci · ARM di terminal';
+
+    stopButton.disabled = false;
+    stopButton.title = 'Klik untuk memeriksa apakah ada proses yang dapat dihentikan';
+
+    const stateText = !live()
+      ? 'Mode Rekaman · Kontrol fisik tidak dijalankan'
+      : !current?.connected
+      ? 'ESP32 belum terhubung'
+      : current?.busy
+      ? 'Pengujian berjalan'
+      : active
+      ? 'Siap menerima perintah'
+      : 'Kontrol fisik menunggu izin firmware';
+
     byId('pcState').textContent = stateText;
   }
+
   async function refresh(showFeedback = false) {
     if (checking) return;
     if (!live()) {
@@ -78,7 +96,14 @@
   byId('pcCheck').addEventListener('click', () => refresh(true));
   for (const button of buttons) {
     button.addEventListener('click', async () => {
-      if (button.disabled || sending) return;
+      if (sending) {
+        feedback('Tunggu proses perintah sebelumnya selesai.');
+        return;
+      }
+      if (!live()) {
+        feedback('Mode Rekaman: tombol dapat diklik, tetapi tidak mengirim perintah ke ESP32.');
+        return;
+      }
       const code = button.dataset.pcCommand;
       const raw = targetInput.value.trim();
       const target = Number(raw);
@@ -88,7 +113,7 @@
       }
       const command = code === 'O' ? 'O' : `${code}:${target}`;
       await refresh(false);
-      if (!verified || !live() || current?.busy || button.disabled) {
+      if (!verified || !live() || current?.busy || (code !== 'O' && current?.can_pressurize !== true)) {
         feedback('Perintah tidak dikirim: koneksi, sensor, atau izin operator sudah berubah.');
         return;
       }
@@ -114,7 +139,19 @@
     });
   }
   stopButton.addEventListener('click', async () => {
-    if (stopButton.disabled || sending) return;
+    if (sending) {
+      feedback('Tunggu proses perintah sebelumnya selesai.');
+      return;
+    }
+    if (!live()) {
+      feedback('Mode Rekaman: tidak ada proses fisik yang dijalankan.');
+      return;
+    }
+    await refresh(false);
+    if (!current?.connected || !current?.busy) {
+      feedback('Tidak ada proses aktif yang dapat dihentikan dari dashboard.');
+      return;
+    }
     if (!window.confirm('Kirim x untuk HENTIKAN proses? x mematikan pompa tetapi TIDAK mengosongkan tekanan. Awasi pelepasan fisik.')) return;
     sending = true;
     render();
